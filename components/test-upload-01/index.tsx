@@ -4,6 +4,9 @@ import * as React from "react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { GallerySelector } from "./gallery-selector";
+import { GalleryCreateManager } from "./gallery-create-manager";
+import { GalleryEditManager } from "./gallery-edit-manager";
+import { GalleryDeleteButton } from "./gallery-delete-button";
 import { ImageCarousel } from "./image-carousel";
 import { UploadManager } from "./upload-manager";
 import { EditManager } from "./edit-manager";
@@ -14,6 +17,9 @@ import {
 	uploadImage,
 	updateImageMetadata,
 	deleteImage,
+	createGallery,
+	updateGallery,
+	deleteGallery,
 } from "./actions";
 import type { GalleryType, ImageType } from "@metalevel/snapix-sdk-core";
 import { UNGROUPED_KEY } from "./constants";
@@ -22,7 +28,8 @@ interface Props {
 	galleries: GalleryType[];
 }
 
-export function SnapixGalleryV1({ galleries }: Props) {
+export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
+	const [galleries, setGalleries] = React.useState<GalleryType[]>(initialGalleries);
 	const [selectedGalleryId, setSelectedGalleryId] = React.useState<
 		string | null
 	>(null);
@@ -39,6 +46,7 @@ export function SnapixGalleryV1({ galleries }: Props) {
 	const cacheKey = selectedGalleryId ?? UNGROUPED_KEY;
 	const currentImages = imageCache[cacheKey] ?? [];
 	const isBusy = isLoading || isUploading;
+	const selectedGallery = galleries.find((g) => g.id === selectedGalleryId) ?? null;
 
 	const loadImages = async (galleryId: string | null, force = false) => {
 		const key = galleryId ?? UNGROUPED_KEY;
@@ -101,6 +109,50 @@ export function SnapixGalleryV1({ galleries }: Props) {
 		}
 	};
 
+	const handleGalleryCreate = async (name: string, isPublic: boolean) => {
+		try {
+			const newGallery = await createGallery(name, isPublic);
+			setGalleries((prev) => [...prev, newGallery]);
+			setSelectedGalleryId(newGallery.id);
+			// Pre-seed an empty cache entry — no fetch needed for a brand-new gallery
+			setImageCache((prev) => ({ ...prev, [newGallery.id]: [] }));
+			toast.success("Gallery created");
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Failed to create gallery");
+		}
+	};
+
+	const handleGalleryEdit = async (galleryId: string, name: string, isPublic: boolean) => {
+		try {
+			const updated = await updateGallery(galleryId, { name, isPublic });
+			setGalleries((prev) =>
+				prev.map((g) => (g.id === galleryId ? updated : g))
+			);
+			toast.success("Gallery updated");
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Failed to update gallery");
+		}
+	};
+
+	const handleGalleryDelete = async (galleryId: string, withImages: boolean) => {
+		try {
+			await deleteGallery(galleryId, withImages);
+			setGalleries((prev) => prev.filter((g) => g.id !== galleryId));
+			setSelectedGalleryId(null);
+			// Clear the deleted gallery's cache entry; also clear ungrouped
+			// so orphaned images (if any) are re-fetched on next view
+			setImageCache((prev) => {
+				const next = { ...prev };
+				delete next[galleryId];
+				if (!withImages) delete next[UNGROUPED_KEY];
+				return next;
+			});
+			toast.success("Gallery deleted");
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Failed to delete gallery");
+		}
+	};
+
 	const handleEdit = async (
 		imageId: string,
 		params: { name: string; description: string; }
@@ -155,29 +207,49 @@ export function SnapixGalleryV1({ galleries }: Props) {
 				</p>
 			</div>
 
-			<div className="flex flex-wrap items-center gap-3 max-w-prose">
-				<GallerySelector
-					galleries={galleries}
-					value={selectedGalleryId}
-					onValueChange={handleGalleryChange}
-					disabled={isBusy}
-				/>
-				<UploadManager
-					selectedGalleryId={selectedGalleryId}
-					isUploading={isUploading}
-					disabled={isBusy}
-					onUpload={handleUpload}
-				/>
-				<EditManager
-					currentImage={currentImage}
-					disabled={isBusy}
-					onEdit={handleEdit}
-				/>
-				<DeleteButton
-					currentImage={currentImage}
-					disabled={isBusy}
-					onDelete={handleDelete}
-				/>
+			<div className="flex flex-col gap-2">
+				{/* Row 1: Gallery actions */}
+				<div className="flex flex-wrap items-center gap-3">
+					<GallerySelector
+						galleries={galleries}
+						value={selectedGalleryId}
+						onValueChange={handleGalleryChange}
+						disabled={isBusy}
+					/>
+					<GalleryCreateManager
+						disabled={isBusy}
+						onCreate={handleGalleryCreate}
+					/>
+					<GalleryEditManager
+						selectedGallery={selectedGallery}
+						disabled={isBusy}
+						onEdit={handleGalleryEdit}
+					/>
+					<GalleryDeleteButton
+						selectedGallery={selectedGallery}
+						disabled={isBusy}
+						onDelete={handleGalleryDelete}
+					/>
+				</div>
+				{/* Row 2: Image actions */}
+				<div className="flex flex-wrap items-center gap-3">
+					<UploadManager
+						selectedGalleryId={selectedGalleryId}
+						isUploading={isUploading}
+						disabled={isBusy}
+						onUpload={handleUpload}
+					/>
+					<EditManager
+						currentImage={currentImage}
+						disabled={isBusy}
+						onEdit={handleEdit}
+					/>
+					<DeleteButton
+						currentImage={currentImage}
+						disabled={isBusy}
+						onDelete={handleDelete}
+					/>
+				</div>
 			</div>
 
 			<div className="flex-1">

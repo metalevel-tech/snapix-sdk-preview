@@ -8,6 +8,7 @@ import type {
 	UploadImageResponse,
 } from "@metalevel/snapix-sdk-core";
 
+
 const client = new SnapixClient();
 
 export async function fetchGalleries(): Promise<GalleryType[]> {
@@ -65,4 +66,25 @@ export async function updateImageMetadata(
 		name,
 		description: description || undefined,
 	});
+}
+
+export async function createGallery(name: string, isPublic: boolean): Promise<GalleryType> {
+	// The SDK types for createGallery return GalleryType at this version,
+	// but the REST API actually returns { gallery: GalleryWithImagesType }.
+	const result = await client.createGallery({ name, isPublic }) as unknown as { gallery: GalleryType; };
+	return result.gallery;
+}
+
+export async function updateGallery(
+	galleryId: string,
+	{ name, isPublic }: { name: string; isPublic: boolean; }
+): Promise<GalleryType> {
+	return client.updateGallery(galleryId, { name, isPublic });
+}
+
+export async function deleteGallery(
+	galleryId: string,
+	deleteImages: boolean
+): Promise<{ success: true; }> {
+	return client.deleteGallery(galleryId, deleteImages);
 }
