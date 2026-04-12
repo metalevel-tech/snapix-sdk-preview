@@ -23,6 +23,9 @@ import {
 } from "./actions";
 import type { GalleryType, ImageType } from "@metalevel/snapix-sdk-core";
 import { UNGROUPED_KEY } from "./constants";
+import Link from "next/link";
+import { Button } from "../ui/button";
+import { ChevronLeft } from "lucide-react";
 
 interface Props {
 	galleries: GalleryType[];
@@ -201,7 +204,14 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 	return (
 		<div className="flex min-h-svh flex-col gap-6 p-6 pb-16">
 			<div className="flex flex-col gap-1.5">
-				<h1 className="font-heading text-2xl font-medium">Test Upload 01</h1>
+				<h1 className="font-heading text-2xl font-medium flex gap-1">
+					<Link href="/" className="flex items-center gap-1 text-muted-foreground mr-1">
+						<ChevronLeft className="size-8 transform" strokeWidth={2} /> Home |
+					</Link>
+					<span>
+						Snapix Gallery V1
+					</span>
+				</h1>
 				<p className="text-sm text-muted-foreground">
 					Gallery &amp; image management powered by SnapiX SDK
 				</p>
