@@ -1,6 +1,6 @@
 {
   "name": "@metalevel/snapix-sdk-preview",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Interactive preview and test app for @metalevel/snapix-sdk-core and future Snapix SDK variants",
   "type": "module",
   "private": true,
