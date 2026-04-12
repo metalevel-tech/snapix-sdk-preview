@@ -4,6 +4,7 @@ import { SnapixClient } from "@metalevel/snapix-sdk-core";
 import type {
 	GalleryType,
 	ImageType,
+	UpdateImageResponse,
 	UploadImageResponse,
 } from "@metalevel/snapix-sdk-core";
 
@@ -54,4 +55,14 @@ export async function uploadImage(formData: FormData): Promise<UploadImageRespon
 
 export async function deleteImage(imageId: string): Promise<{ success: true; }> {
 	return client.deleteImage(imageId);
+}
+
+export async function updateImageMetadata(
+	imageId: string,
+	{ name, description }: { name: string; description: string; }
+): Promise<UpdateImageResponse> {
+	return client.updateImage(imageId, {
+		name,
+		description: description || undefined,
+	});
 }

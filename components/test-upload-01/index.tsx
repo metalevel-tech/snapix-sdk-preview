@@ -6,11 +6,13 @@ import { Progress } from "@/components/ui/progress";
 import { GallerySelector } from "./gallery-selector";
 import { ImageCarousel } from "./image-carousel";
 import { UploadManager } from "./upload-manager";
+import { EditManager } from "./edit-manager";
 import { DeleteButton } from "./delete-button";
 import {
 	fetchGalleryImages,
 	fetchUngroupedImages,
 	uploadImage,
+	updateImageMetadata,
 	deleteImage,
 } from "./actions";
 import type { GalleryType, ImageType } from "@metalevel/snapix-sdk-core";
@@ -99,6 +101,29 @@ export function SnapixGalleryV1({ galleries }: Props) {
 		}
 	};
 
+	const handleEdit = async (
+		imageId: string,
+		params: { name: string; description: string; }
+	) => {
+		try {
+			const { data } = await updateImageMetadata(imageId, params);
+			// Patch the cache in-place — no refetch needed
+			setImageCache((prev) => {
+				const updated = { ...prev };
+				if (updated[cacheKey]) {
+					updated[cacheKey] = updated[cacheKey].map((img) =>
+						img.id === imageId ? data : img
+					);
+				}
+				return updated;
+			});
+			setCurrentImage((prev) => (prev?.id === imageId ? data : prev));
+			toast.success("Image updated");
+		} catch (err) {
+			toast.error(err instanceof Error ? err.message : "Update failed");
+		}
+	};
+
 	const handleDelete = async (imageId: string) => {
 		setIsLoading(true);
 		try {
@@ -142,6 +167,11 @@ export function SnapixGalleryV1({ galleries }: Props) {
 					isUploading={isUploading}
 					disabled={isBusy}
 					onUpload={handleUpload}
+				/>
+				<EditManager
+					currentImage={currentImage}
+					disabled={isBusy}
+					onEdit={handleEdit}
 				/>
 				<DeleteButton
 					currentImage={currentImage}

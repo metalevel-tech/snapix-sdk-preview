@@ -2,18 +2,8 @@
 
 import * as React from "react";
 import { UploadIcon } from "lucide-react";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { ImageMetadataDialog } from "./image-metadata-dialog";
 
 interface UploadManagerProps {
 	selectedGalleryId: string | null;
@@ -78,52 +68,18 @@ export function UploadManager({
 				<UploadIcon data-icon="inline-start" />
 				Pick & Upload Image
 			</Button>
-			<AlertDialog open={open} onOpenChange={setOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Upload Image</AlertDialogTitle>
-						<AlertDialogDescription>
-							Are you sure you want to upload this image?
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<div className="flex flex-col gap-3">
-						<div className="flex flex-col gap-1.5">
-							<label htmlFor="upload-name" className="text-sm font-medium">
-								Image Name
-							</label>
-							<Input
-								id="upload-name"
-								value={name}
-								onChange={(e) => setName(e.target.value)}
-								placeholder="Image name"
-							/>
-						</div>
-						<div className="flex flex-col gap-1.5">
-							<label htmlFor="upload-description" className="text-sm font-medium">
-								Description{" "}
-								<span className="font-normal text-muted-foreground">
-									(optional)
-								</span>
-							</label>
-							<Input
-								id="upload-description"
-								value={description}
-								onChange={(e) => setDescription(e.target.value)}
-								placeholder="Add a description..."
-							/>
-						</div>
-					</div>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={handleConfirm}
-							disabled={!name.trim()}
-						>
-							Upload
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<ImageMetadataDialog
+				open={open}
+				onOpenChange={setOpen}
+				title="Upload Image"
+				dialogDescription="Are you sure you want to upload this image?"
+				confirmLabel="Upload"
+				name={name}
+				onNameChange={setName}
+				imageDescription={description}
+				onImageDescriptionChange={setDescription}
+				onConfirm={handleConfirm}
+			/>
 		</>
 	);
 }
