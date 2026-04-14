@@ -1,18 +1,21 @@
 "use client";
 
-import * as React from "react";
-import { UploadIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { GalleryType } from "@metalevel/snapix-sdk-core";
+import { UploadIcon } from "lucide-react";
+import * as React from "react";
 import { ImageMetadataDialog } from "./image-metadata-dialog";
 
 interface UploadManagerProps {
+	galleries: GalleryType[];
 	selectedGalleryId: string | null;
 	isUploading: boolean;
 	disabled?: boolean;
-	onUpload: (formData: FormData) => Promise<void>;
+	onUpload: (formData: FormData, targetGalleryIds: string[]) => Promise<void>;
 }
 
 export function UploadManager({
+	galleries,
 	selectedGalleryId,
 	isUploading,
 	disabled = false,
@@ -23,6 +26,7 @@ export function UploadManager({
 	const [file, setFile] = React.useState<File | null>(null);
 	const [name, setName] = React.useState("");
 	const [description, setDescription] = React.useState("");
+	const [dialogGalleryIds, setDialogGalleryIds] = React.useState<string[]>([]);
 
 	const handlePickFile = () => {
 		fileInputRef.current?.click();
@@ -34,6 +38,7 @@ export function UploadManager({
 		setFile(selected);
 		setName(selected.name.replace(/\.[^.]+$/, ""));
 		setDescription("");
+		setDialogGalleryIds(selectedGalleryId ? [selectedGalleryId] : []);
 		setOpen(true);
 		e.target.value = "";
 	};
@@ -44,11 +49,9 @@ export function UploadManager({
 		formData.append("file", file);
 		formData.append("name", name);
 		formData.append("description", description);
-		if (selectedGalleryId) {
-			formData.append("galleryId", selectedGalleryId);
-		}
+		dialogGalleryIds.forEach((id) => formData.append("galleryId", id));
 		setOpen(false);
-		await onUpload(formData);
+		await onUpload(formData, dialogGalleryIds);
 	};
 
 	return (
@@ -79,6 +82,9 @@ export function UploadManager({
 				imageDescription={description}
 				onImageDescriptionChange={setDescription}
 				onConfirm={handleConfirm}
+				galleries={galleries}
+				galleryIds={dialogGalleryIds}
+				onGalleryIdsChange={setDialogGalleryIds}
 			/>
 		</>
 	);

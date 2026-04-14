@@ -1,31 +1,30 @@
 "use client";
 
+import { Progress } from "@/components/ui/progress";
+import type { GalleryType, ImageType } from "@metalevel/snapix-sdk-core";
+import { ChevronLeft } from "lucide-react";
+import Link from "next/link";
 import * as React from "react";
 import { toast } from "sonner";
-import { Progress } from "@/components/ui/progress";
-import { GallerySelector } from "./gallery-selector";
+import {
+  createGallery,
+  deleteGallery,
+  deleteImage,
+  fetchGalleryImages,
+  fetchUngroupedImages,
+  updateGallery,
+  updateImageMetadata,
+  uploadImage,
+} from "./actions";
+import { UNGROUPED_KEY } from "./constants";
+import { DeleteButton } from "./delete-button";
+import { EditManager } from "./edit-manager";
 import { GalleryCreateManager } from "./gallery-create-manager";
-import { GalleryEditManager } from "./gallery-edit-manager";
 import { GalleryDeleteButton } from "./gallery-delete-button";
+import { GalleryEditManager } from "./gallery-edit-manager";
+import { GallerySelector } from "./gallery-selector";
 import { ImageCarousel } from "./image-carousel";
 import { UploadManager } from "./upload-manager";
-import { EditManager } from "./edit-manager";
-import { DeleteButton } from "./delete-button";
-import {
-	fetchGalleryImages,
-	fetchUngroupedImages,
-	uploadImage,
-	updateImageMetadata,
-	deleteImage,
-	createGallery,
-	updateGallery,
-	deleteGallery,
-} from "./actions";
-import type { GalleryType, ImageType } from "@metalevel/snapix-sdk-core";
-import { UNGROUPED_KEY } from "./constants";
-import Link from "next/link";
-import { Button } from "../ui/button";
-import { ChevronLeft } from "lucide-react";
 
 interface Props {
 	galleries: GalleryType[];
@@ -45,11 +44,15 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [isUploading, setIsUploading] = React.useState(false);
 	const [uploadProgress, setUploadProgress] = React.useState(0);
+	const [startImageId, setStartImageId] = React.useState<string | null>(null);
 
 	const cacheKey = selectedGalleryId ?? UNGROUPED_KEY;
 	const currentImages = imageCache[cacheKey] ?? [];
 	const isBusy = isLoading || isUploading;
 	const selectedGallery = galleries.find((g) => g.id === selectedGalleryId) ?? null;
+	const startIndex = startImageId
+		? Math.max(0, currentImages.findIndex((img) => img.id === startImageId))
+		: 0;
 
 	const loadImages = async (galleryId: string | null, force = false) => {
 		const key = galleryId ?? UNGROUPED_KEY;
@@ -76,11 +79,12 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 	}, []);
 
 	const handleGalleryChange = (galleryId: string | null) => {
+		setStartImageId(null);
 		setSelectedGalleryId(galleryId);
 		void loadImages(galleryId);
 	};
 
-	const handleUpload = async (formData: FormData) => {
+	const handleUpload = async (formData: FormData, targetGalleryIds: string[]) => {
 		setIsUploading(true);
 		setUploadProgress(5);
 
@@ -91,15 +95,24 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 		try {
 			await uploadImage(formData);
 			clearInterval(progressInterval);
-			setUploadProgress(90);
-
-			// Refetch current gallery/ungrouped to show the newly uploaded image
-			const key = selectedGalleryId ?? UNGROUPED_KEY;
-			const images = selectedGalleryId
-				? await fetchGalleryImages(selectedGalleryId)
-				: await fetchUngroupedImages();
-			setImageCache((prev) => ({ ...prev, [key]: images }));
 			setUploadProgress(100);
+
+			// Evict all target gallery caches + ungrouped; let them refetch fresh
+			setImageCache((prev) => {
+				const next = { ...prev };
+				targetGalleryIds.forEach((id) => delete next[id]);
+				delete next[UNGROUPED_KEY];
+				return next;
+			});
+
+			// Navigate to the appropriate gallery
+			const stayOnCurrent =
+				selectedGalleryId === null
+					? targetGalleryIds.length === 0
+					: targetGalleryIds.includes(selectedGalleryId);
+			const navigateTo = stayOnCurrent ? selectedGalleryId : (targetGalleryIds[0] ?? null);
+			setSelectedGalleryId(navigateTo);
+			void loadImages(navigateTo, true);
 			toast.success("Image uploaded successfully");
 		} catch (err) {
 			clearInterval(progressInterval);
@@ -147,9 +160,10 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 			setImageCache((prev) => {
 				const next = { ...prev };
 				delete next[galleryId];
-				if (!withImages) delete next[UNGROUPED_KEY];
+				delete next[UNGROUPED_KEY];
 				return next;
 			});
+			void loadImages(null, true);
 			toast.success("Gallery deleted");
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : "Failed to delete gallery");
@@ -158,21 +172,42 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 
 	const handleEdit = async (
 		imageId: string,
-		params: { name: string; description: string; }
+		params: { name: string; description: string; galleryIds: string[]; originalGalleryIds: string[] }
 	) => {
 		try {
-			const { data } = await updateImageMetadata(imageId, params);
-			// Patch the cache in-place — no refetch needed
-			setImageCache((prev) => {
-				const updated = { ...prev };
-				if (updated[cacheKey]) {
-					updated[cacheKey] = updated[cacheKey].map((img) =>
-						img.id === imageId ? data : img
-					);
-				}
-				return updated;
+			const oldGalleryIds = params.originalGalleryIds;
+			await updateImageMetadata(imageId, {
+				name: params.name,
+				description: params.description,
+				galleries: params.galleryIds,
 			});
-			setCurrentImage((prev) => (prev?.id === imageId ? data : prev));
+
+			// Evict all affected gallery caches (old + new + current + ungrouped if relevant)
+			const affectedIds = new Set([...oldGalleryIds, ...params.galleryIds, cacheKey]);
+			if (oldGalleryIds.length === 0 || params.galleryIds.length === 0) {
+				affectedIds.add(UNGROUPED_KEY);
+			}
+			setImageCache((prev) => {
+				const next = { ...prev };
+				affectedIds.forEach((id) => delete next[id]);
+				return next;
+			});
+			setCurrentImage(null);
+
+			// Stay on current gallery if it's still in the new assignment
+			const currentInNew =
+				selectedGalleryId === null
+					? params.galleryIds.length === 0
+					: params.galleryIds.includes(selectedGalleryId);
+
+			setStartImageId(imageId);
+			if (currentInNew) {
+				void loadImages(selectedGalleryId, true);
+			} else {
+				const navigateTo = params.galleryIds[0] ?? null;
+				setSelectedGalleryId(navigateTo);
+				void loadImages(navigateTo, true);
+			}
 			toast.success("Image updated");
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : "Update failed");
@@ -244,12 +279,15 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 				{/* Row 2: Image actions */}
 				<div className="flex flex-wrap items-center gap-3">
 					<UploadManager
+						galleries={galleries}
 						selectedGalleryId={selectedGalleryId}
 						isUploading={isUploading}
 						disabled={isBusy}
 						onUpload={handleUpload}
 					/>
 					<EditManager
+						galleries={galleries}
+						selectedGalleryId={selectedGalleryId}
 						currentImage={currentImage}
 						disabled={isBusy}
 						onEdit={handleEdit}
@@ -267,6 +305,7 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 					key={cacheKey}
 					images={currentImages}
 					isLoading={isLoading}
+					startIndex={startIndex}
 					onImageChange={setCurrentImage}
 				/>
 			</div>

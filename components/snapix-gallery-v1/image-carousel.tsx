@@ -1,10 +1,10 @@
 "use client";
 
-import * as React from "react";
-import { Loader2Icon, ChevronLeft, ChevronRight } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "@/components/ui/button";
 import type { ImageType } from "@metalevel/snapix-sdk-core";
+import { ChevronLeft, ChevronRight, Loader2Icon } from "lucide-react";
+import * as React from "react";
 import { Skeleton } from "../ui/skeleton";
 
 // The actual REST API metadata shape differs from the SDK types:
@@ -45,12 +45,14 @@ interface ImageCarouselProps {
 	images: ImageType[];
 	isLoading: boolean;
 	onImageChange: (image: ImageType | null) => void;
+	startIndex?: number;
 }
 
 export function ImageCarousel({
 	images,
 	isLoading,
 	onImageChange,
+	startIndex = 0,
 }: ImageCarouselProps) {
 	const [current, setCurrent] = React.useState(0);
 	const [failedImages, setFailedImages] = React.useState<Set<string>>(new Set());
@@ -61,10 +63,11 @@ export function ImageCarousel({
 		}
 	}, []);
 
-	// When images array changes, reset to slide 0
+	// When images array changes, jump to startIndex (default 0)
 	React.useEffect(() => {
-		setCurrent(0);
-		onImageChange(images[0] ?? null);
+		const idx = Math.min(startIndex, Math.max(images.length - 1, 0));
+		setCurrent(idx);
+		onImageChange(images[idx] ?? null);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [images]);
 

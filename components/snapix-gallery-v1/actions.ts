@@ -48,7 +48,7 @@ export async function uploadImage(
   const file = formData.get("file") as File
   const name = formData.get("name") as string
   const description = formData.get("description") as string | null
-  const galleryId = formData.get("galleryId") as string | null
+  const galleryIds = formData.getAll("galleryId").filter(Boolean) as string[]
 
   const arrayBuffer = await file.arrayBuffer()
   const imageBase64 = Buffer.from(arrayBuffer).toString("base64")
@@ -59,7 +59,7 @@ export async function uploadImage(
       imageContentType: file.type,
       name: name || file.name,
       description: description || undefined,
-      galleries: galleryId ? [galleryId] : undefined,
+      galleries: galleryIds.length > 0 ? galleryIds : undefined,
       formatOptions: [{ format: "webp" }, { format: "avif" }],
     })
   } catch (err) {
@@ -70,6 +70,11 @@ export async function uploadImage(
     }
     throw err
   }
+}
+
+export async function fetchImageById(imageId: string): Promise<ImageType> {
+  const { data } = await client.getImage(imageId)
+  return data
 }
 
 export async function deleteImage(
@@ -89,12 +94,17 @@ export async function deleteImage(
 
 export async function updateImageMetadata(
   imageId: string,
-  { name, description }: { name: string; description: string }
+  {
+    name,
+    description,
+    galleries,
+  }: { name: string; description: string; galleries?: string[] }
 ): Promise<UpdateImageResponse> {
   try {
     return await client.updateImage(imageId, {
       name,
       description: description || undefined,
+      galleries,
     })
   } catch (err) {
     if (err instanceof SnapixApiError && err.isReadOnly) {
