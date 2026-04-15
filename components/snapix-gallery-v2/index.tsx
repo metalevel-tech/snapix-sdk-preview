@@ -30,7 +30,7 @@ interface Props {
 	galleries: GalleryType[];
 }
 
-export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
+export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 	const [galleries, setGalleries] = React.useState<GalleryType[]>(initialGalleries);
 	const [selectedGalleryId, setSelectedGalleryId] = React.useState<
 		string | null
@@ -84,7 +84,7 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 		void loadImages(galleryId);
 	};
 
-	const handleUpload = async (formData: FormData, targetGalleryId: string | null) => {
+	const handleUpload = async (formData: FormData, targetGalleryIds: string[]) => {
 		setIsUploading(true);
 		setUploadProgress(5);
 
@@ -97,17 +97,20 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 			clearInterval(progressInterval);
 			setUploadProgress(100);
 
-			// Evict target gallery cache + ungrouped; let them refetch fresh
+			// Evict all target gallery caches + ungrouped; let them refetch fresh
 			setImageCache((prev) => {
 				const next = { ...prev };
-				if (targetGalleryId) delete next[targetGalleryId];
+				targetGalleryIds.forEach((id) => delete next[id]);
 				delete next[UNGROUPED_KEY];
 				return next;
 			});
 
 			// Navigate to the appropriate gallery
-			const stayOnCurrent = selectedGalleryId === targetGalleryId;
-			const navigateTo = stayOnCurrent ? selectedGalleryId : targetGalleryId;
+			const stayOnCurrent =
+				selectedGalleryId === null
+					? targetGalleryIds.length === 0
+					: targetGalleryIds.includes(selectedGalleryId);
+			const navigateTo = stayOnCurrent ? selectedGalleryId : (targetGalleryIds[0] ?? null);
 			setSelectedGalleryId(navigateTo);
 			void loadImages(navigateTo, true);
 			toast.success("Image uploaded successfully");
@@ -169,37 +172,41 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 
 	const handleEdit = async (
 		imageId: string,
-		params: { name: string; description: string; galleryId: string | null }
+		params: { name: string; description: string; galleryIds: string[]; originalGalleryIds: string[] }
 	) => {
 		try {
-			const originalGalleryId = currentImage?.galleries?.[0]?.galleryId ?? selectedGalleryId ?? null;
+			const oldGalleryIds = params.originalGalleryIds;
 			await updateImageMetadata(imageId, {
 				name: params.name,
 				description: params.description,
-				gallery: params.galleryId,
+				galleries: params.galleryIds,
 			});
 
-			// Evict old gallery, new gallery, and ungrouped caches
+			// Evict all affected gallery caches (old + new + current + ungrouped if relevant)
+			const affectedIds = new Set([...oldGalleryIds, ...params.galleryIds, cacheKey]);
+			if (oldGalleryIds.length === 0 || params.galleryIds.length === 0) {
+				affectedIds.add(UNGROUPED_KEY);
+			}
 			setImageCache((prev) => {
 				const next = { ...prev };
-				if (originalGalleryId) delete next[originalGalleryId];
-				if (params.galleryId) delete next[params.galleryId];
-				delete next[UNGROUPED_KEY];
+				affectedIds.forEach((id) => delete next[id]);
 				return next;
 			});
 			setCurrentImage(null);
 
-			// Stay on current gallery if it's still the new assignment
+			// Stay on current gallery if it's still in the new assignment
 			const currentInNew =
-				selectedGalleryId === params.galleryId ||
-				(selectedGalleryId === null && !params.galleryId);
+				selectedGalleryId === null
+					? params.galleryIds.length === 0
+					: params.galleryIds.includes(selectedGalleryId);
 
 			setStartImageId(imageId);
 			if (currentInNew) {
 				void loadImages(selectedGalleryId, true);
 			} else {
-				setSelectedGalleryId(params.galleryId);
-				void loadImages(params.galleryId, true);
+				const navigateTo = params.galleryIds[0] ?? null;
+				setSelectedGalleryId(navigateTo);
+				void loadImages(navigateTo, true);
 			}
 			toast.success("Image updated");
 		} catch (err) {
@@ -237,7 +244,7 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 						<ChevronLeft className="size-8 transform" strokeWidth={2} /> Home |
 					</Link>
 					<span>
-						Snapix Gallery V1 (Image in Single Gallery)
+						Snapix Gallery V2 (Image in Multiple Galleries)
 					</span>
 				</h1>
 				<p className="text-sm text-muted-foreground">

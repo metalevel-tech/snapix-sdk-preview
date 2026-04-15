@@ -11,7 +11,7 @@ interface UploadManagerProps {
 	selectedGalleryId: string | null;
 	isUploading: boolean;
 	disabled?: boolean;
-	onUpload: (formData: FormData, targetGalleryId: string | null) => Promise<void>;
+	onUpload: (formData: FormData, targetGalleryIds: string[]) => Promise<void>;
 }
 
 export function UploadManager({
@@ -26,7 +26,7 @@ export function UploadManager({
 	const [file, setFile] = React.useState<File | null>(null);
 	const [name, setName] = React.useState("");
 	const [description, setDescription] = React.useState("");
-	const [dialogGalleryId, setDialogGalleryId] = React.useState<string | null>(null);
+	const [dialogGalleryIds, setDialogGalleryIds] = React.useState<string[]>([]);
 
 	const handlePickFile = () => {
 		fileInputRef.current?.click();
@@ -38,7 +38,7 @@ export function UploadManager({
 		setFile(selected);
 		setName(selected.name.replace(/\.[^.]+$/, ""));
 		setDescription("");
-		setDialogGalleryId(selectedGalleryId);
+		setDialogGalleryIds(selectedGalleryId ? [selectedGalleryId] : []);
 		setOpen(true);
 		e.target.value = "";
 	};
@@ -49,9 +49,9 @@ export function UploadManager({
 		formData.append("file", file);
 		formData.append("name", name);
 		formData.append("description", description);
-		if (dialogGalleryId) formData.append("galleryId", dialogGalleryId);
+		dialogGalleryIds.forEach((id) => formData.append("galleryId", id));
 		setOpen(false);
-		await onUpload(formData, dialogGalleryId);
+		await onUpload(formData, dialogGalleryIds);
 	};
 
 	return (
@@ -83,8 +83,8 @@ export function UploadManager({
 				onImageDescriptionChange={setDescription}
 				onConfirm={handleConfirm}
 				galleries={galleries}
-				galleryId={dialogGalleryId}
-				onGalleryIdChange={setDialogGalleryId}
+				galleryIds={dialogGalleryIds}
+				onGalleryIdsChange={setDialogGalleryIds}
 			/>
 		</>
 	);

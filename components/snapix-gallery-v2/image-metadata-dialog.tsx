@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { GalleryType } from "@metalevel/snapix-sdk-core";
-import { GallerySelector } from "./gallery-selector";
+import { GalleryMultiSelector } from "./gallery-multi-selector";
 
 interface ImageMetadataDialogProps {
 	open: boolean;
@@ -28,8 +28,8 @@ interface ImageMetadataDialogProps {
 	onConfirm: () => void;
 	confirmDisabled?: boolean;
 	galleries?: GalleryType[];
-	galleryId?: string | null;
-	onGalleryIdChange?: (id: string | null) => void;
+	galleryIds?: string[];
+	onGalleryIdsChange?: (ids: string[]) => void;
 }
 
 export function ImageMetadataDialog({
@@ -45,8 +45,8 @@ export function ImageMetadataDialog({
 	onConfirm,
 	confirmDisabled,
 	galleries,
-	galleryId,
-	onGalleryIdChange,
+	galleryIds,
+	onGalleryIdsChange,
 }: ImageMetadataDialogProps) {
 	return (
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -85,13 +85,13 @@ export function ImageMetadataDialog({
 							rows={3}
 						/>
 					</div>
-					{galleries && onGalleryIdChange && (
+					{galleries && onGalleryIdsChange && (
 						<div className="flex flex-col gap-1.5">
-							<label className="text-sm font-medium">Gallery</label>
-							<GallerySelector
+							<label className="text-sm font-medium">Galleries</label>
+							<GalleryMultiSelector
 								galleries={galleries}
-								value={galleryId ?? null}
-								onValueChange={onGalleryIdChange}
+								values={galleryIds ?? []}
+								onValuesChange={onGalleryIdsChange}
 							/>
 						</div>
 					)}
