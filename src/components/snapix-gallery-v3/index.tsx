@@ -11,7 +11,7 @@ import { UNGROUPED_KEY } from "./constants";
 import { GallerySelector } from "./gallery-selector";
 import { ImageCarousel } from "./image-carousel";
 
-export function SnapixGalleryV2c() {
+export function SnapixGalleryV3() {
 	const [galleries, setGalleries] = React.useState<GalleryType[]>([]);
 	const [selectedGalleryId, setSelectedGalleryId] = React.useState<string | null>(null);
 	const [imageCache, setImageCache] = React.useState<Record<string, ImageType[]>>({});

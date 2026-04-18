@@ -68,7 +68,7 @@ export function EditManager({
 				onClick={handleOpen}
 			>
 				<PencilIcon data-icon="inline-start" />
-				Edit Image
+				Edit
 			</Button>
 			<ImageMetadataDialog
 				open={open}

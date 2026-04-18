@@ -28,6 +28,7 @@ import { GallerySelector } from "./gallery-selector";
 import { ImageCarousel } from "./image-carousel";
 import { UploadManager } from "./upload-manager";
 import { DownloadButton } from "./download-button";
+import { OpenButton } from "./open-button";
 
 // The actual REST API metadata shape differs from the SDK types (same as image-carousel.tsx)
 type RawMeta = {
@@ -389,6 +390,11 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 						templateImageUrl={templateImageUrl}
 						disabled={isBusy}
 						onGenerate={handleGenerate}
+					/>
+					<OpenButton
+						currentImage={currentImage}
+						templateImageUrl={templateImageUrl}
+						disabled={isBusy}
 					/>
 					<DownloadButton
 						currentImage={currentImage}

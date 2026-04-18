@@ -17,11 +17,13 @@ export function DownloadButton({
 }: DownloadButtonProps) {
 	const handleDownload = () => {
 		if (!templateImageUrl || !currentImage) return;
+		const proxyUrl =
+			`/api/download?` +
+			`url=${encodeURIComponent(templateImageUrl)}&` +
+			`filename=${encodeURIComponent(currentImage.originalName)}`;
 		const a = document.createElement("a");
-		a.href = templateImageUrl;
+		a.href = proxyUrl;
 		a.download = currentImage.originalName;
-		a.target = "_blank";
-		a.rel = "noopener noreferrer";
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);

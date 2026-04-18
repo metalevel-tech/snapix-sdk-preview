@@ -72,7 +72,7 @@ export function GenerateManager({
 				onClick={handleOpen}
 			>
 				<SparklesIcon data-icon="inline-start" />
-				Generate Image
+				Generate
 			</Button>
 			<AlertDialog open={open} onOpenChange={setOpen}>
 				<AlertDialogContent>

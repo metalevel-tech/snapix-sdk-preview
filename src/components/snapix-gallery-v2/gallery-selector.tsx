@@ -60,7 +60,7 @@ export function GallerySelector({
 				placeholder="Select gallery..."
 				showClear={false}
 				disabled={disabled}
-				className="w-56 min-w-[16.45rem]"
+				className="w-56 min-w-64"
 				onFocus={(e: React.FocusEvent<HTMLInputElement>) => e.target.select()}
 				value={typedValue || (value ? allItems.find((g) => g.id === value)?.name ?? "" : UNGROUPED_LABEL)}
 				onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTypedValue(e.target.value)}
