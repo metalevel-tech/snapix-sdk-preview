@@ -65,11 +65,12 @@ export function UploadManager({
 			/>
 			<Button
 				variant="outline"
+				className="border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 hover:text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/15 dark:text-emerald-400 dark:hover:bg-emerald-500/25 dark:hover:text-emerald-400"
 				disabled={disabled || isUploading}
 				onClick={handlePickFile}
 			>
 				<UploadIcon data-icon="inline-start" />
-				Pick & Upload Image
+				Upload Image
 			</Button>
 			<ImageMetadataDialog
 				open={open}

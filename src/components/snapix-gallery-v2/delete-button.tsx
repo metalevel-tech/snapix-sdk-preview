@@ -38,6 +38,7 @@ export function DeleteButton({
 		<>
 			<Button
 				variant="destructive"
+				className="border border-destructive/40"
 				disabled={disabled || !currentImage}
 				onClick={() => setOpen(true)}
 			>

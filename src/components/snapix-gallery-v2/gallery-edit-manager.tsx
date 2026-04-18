@@ -49,6 +49,7 @@ export function GalleryEditManager({
 		<>
 			<Button
 				variant="outline"
+				className="border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 hover:text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/15 dark:text-amber-400 dark:hover:bg-amber-500/25 dark:hover:text-amber-400"
 				disabled={disabled || !selectedGallery}
 				onClick={handleOpen}
 			>

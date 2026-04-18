@@ -45,6 +45,7 @@ export function GalleryDeleteButton({
 		<>
 			<Button
 				variant="destructive"
+				className="border border-destructive/40"
 				disabled={disabled || !selectedGallery}
 				onClick={handleOpen}
 			>

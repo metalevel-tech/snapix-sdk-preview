@@ -7,24 +7,55 @@ import Link from "next/link";
 import * as React from "react";
 import { toast } from "sonner";
 import {
-  createGallery,
-  deleteGallery,
-  deleteImage,
-  fetchGalleryImages,
-  fetchUngroupedImages,
-  updateGallery,
-  updateImageMetadata,
-  uploadImage,
+	createGallery,
+	deleteGallery,
+	deleteImage,
+	fetchGalleryImages,
+	fetchUngroupedImages,
+	generateImage,
+	updateGallery,
+	updateImageMetadata,
+	uploadImage,
 } from "./actions";
 import { UNGROUPED_KEY } from "./constants";
 import { DeleteButton } from "./delete-button";
 import { EditManager } from "./edit-manager";
+import { GenerateManager } from "./generate-manager";
 import { GalleryCreateManager } from "./gallery-create-manager";
 import { GalleryDeleteButton } from "./gallery-delete-button";
 import { GalleryEditManager } from "./gallery-edit-manager";
 import { GallerySelector } from "./gallery-selector";
 import { ImageCarousel } from "./image-carousel";
 import { UploadManager } from "./upload-manager";
+import { DownloadButton } from "./download-button";
+
+// The actual REST API metadata shape differs from the SDK types (same as image-carousel.tsx)
+type RawMeta = {
+	objectKey: string | null;
+	fileExtension: string;
+	imageInfo: { type: string; width: number; height: number; };
+};
+
+function getBestVariantUrl(image: ImageType): string {
+	if (!image?.urlBase) return "";
+	const rawMeta = (image?.metadata ?? []) as unknown as RawMeta[];
+	const candidates = rawMeta.filter((m) => !!m.objectKey);
+	if (!candidates.length) return "";
+	const formats = ["webp", "avif", "jpg", "jpeg", "png"];
+	for (const format of formats) {
+		const byFormat = candidates.filter(
+			(m) => m.fileExtension === format || m.imageInfo?.type === format
+		);
+		if (!byFormat.length) continue;
+		const sorted = [...byFormat].sort(
+			(a, b) =>
+				(b.imageInfo?.width ?? 0) * (b.imageInfo?.height ?? 0) -
+				(a.imageInfo?.width ?? 0) * (a.imageInfo?.height ?? 0)
+		);
+		return `${image.urlBase}/${sorted[0].objectKey}`;
+	}
+	return `${image.urlBase}/${candidates[0].objectKey}`;
+}
 
 interface Props {
 	galleries: GalleryType[];
@@ -44,12 +75,15 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [isUploading, setIsUploading] = React.useState(false);
 	const [uploadProgress, setUploadProgress] = React.useState(0);
+	const [isGenerating, setIsGenerating] = React.useState(false);
+	const [generateProgress, setGenerateProgress] = React.useState(0);
 	const [startImageId, setStartImageId] = React.useState<string | null>(null);
 
 	const cacheKey = selectedGalleryId ?? UNGROUPED_KEY;
 	const currentImages = imageCache[cacheKey] ?? [];
-	const isBusy = isLoading || isUploading;
+	const isBusy = isLoading || isUploading || isGenerating;
 	const selectedGallery = galleries.find((g) => g.id === selectedGalleryId) ?? null;
+	const templateImageUrl = currentImage ? getBestVariantUrl(currentImage) || null : null;
 	const startIndex = startImageId
 		? Math.max(0, currentImages.findIndex((img) => img.id === startImageId))
 		: 0;
@@ -125,6 +159,63 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 		}
 	};
 
+	const handleGenerate = async (params: {
+		name: string;
+		prompt: string;
+		galleryIds: string[];
+		imageUrl?: string;
+	}) => {
+		setIsGenerating(true);
+		setGenerateProgress(5);
+
+		const progressInterval = setInterval(() => {
+			setGenerateProgress((prev) => Math.min(prev + 5, 85));
+		}, 500);
+
+		try {
+			const result = await generateImage({
+				promptText: params.prompt,
+				name: params.name || undefined,
+				description: params.prompt,
+				galleries: params.galleryIds.length > 0 ? params.galleryIds : undefined,
+				imageUrl: params.imageUrl,
+			});
+			clearInterval(progressInterval);
+			setGenerateProgress(100);
+
+			const generatedImage = result.data[0];
+
+			// Evict target gallery caches + ungrouped
+			setImageCache((prev) => {
+				const next = { ...prev };
+				params.galleryIds.forEach((id) => delete next[id]);
+				delete next[UNGROUPED_KEY];
+				return next;
+			});
+
+			// Navigate to the appropriate gallery
+			const stayOnCurrent =
+				selectedGalleryId === null
+					? params.galleryIds.length === 0
+					: params.galleryIds.includes(selectedGalleryId);
+			const navigateTo = stayOnCurrent
+				? selectedGalleryId
+				: (params.galleryIds[0] ?? null);
+			if (generatedImage) setStartImageId(generatedImage.id);
+			setSelectedGalleryId(navigateTo);
+			void loadImages(navigateTo, true);
+			toast.success("Image generated successfully");
+		} catch (err) {
+			clearInterval(progressInterval);
+			toast.error(err instanceof Error ? err.message : "Generation failed");
+		} finally {
+			setTimeout(() => {
+				setIsGenerating(false);
+				setGenerateProgress(0);
+			}, 800);
+		}
+	};
+
 	const handleGalleryCreate = async (name: string, isPublic: boolean) => {
 		try {
 			const newGallery = await createGallery(name, isPublic);
@@ -172,7 +263,7 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 
 	const handleEdit = async (
 		imageId: string,
-		params: { name: string; description: string; galleryIds: string[]; originalGalleryIds: string[] }
+		params: { name: string; description: string; galleryIds: string[]; originalGalleryIds: string[]; }
 	) => {
 		try {
 			const oldGalleryIds = params.originalGalleryIds;
@@ -252,9 +343,9 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 				</p>
 			</div>
 
-			<div className="flex flex-col gap-2">
+			<div className="flex flex-col gap-2 max-w-prose">
 				{/* Row 1: Gallery actions */}
-				<div className="flex flex-wrap items-center gap-3">
+				<div className="flex flex-wrap items-center gap-3 *:flex-2 w-full">
 					<GallerySelector
 						galleries={galleries}
 						value={selectedGalleryId}
@@ -277,7 +368,7 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 					/>
 				</div>
 				{/* Row 2: Image actions */}
-				<div className="flex flex-wrap items-center gap-3">
+				<div className="flex flex-wrap items-center gap-3 *:flex-1 w-full">
 					<UploadManager
 						galleries={galleries}
 						selectedGalleryId={selectedGalleryId}
@@ -291,6 +382,18 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 						currentImage={currentImage}
 						disabled={isBusy}
 						onEdit={handleEdit}
+					/>
+					<GenerateManager
+						galleries={galleries}
+						selectedGalleryId={selectedGalleryId}
+						templateImageUrl={templateImageUrl}
+						disabled={isBusy}
+						onGenerate={handleGenerate}
+					/>
+					<DownloadButton
+						currentImage={currentImage}
+						templateImageUrl={templateImageUrl}
+						disabled={isBusy}
 					/>
 					<DeleteButton
 						currentImage={currentImage}
@@ -310,9 +413,12 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 				/>
 			</div>
 
-			{isUploading && (
+			{(isUploading || isGenerating) && (
 				<div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm">
-					<Progress value={uploadProgress} className="rounded-none" />
+					<Progress
+						value={isUploading ? uploadProgress : generateProgress}
+						className="rounded-none"
+					/>
 				</div>
 			)}
 		</div>
