@@ -1,7 +1,8 @@
 import { Geist, Geist_Mono } from "next/font/google";
 
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@wrksz/themes/next";
+import ThemeHotkey from "@/components/theme/ThemeHotkey";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +30,13 @@ export default function RootLayout({
       lang="en"
     >
       <body>
-        <ThemeProvider>
+        <ThemeProvider
+          disableTransitionOnChange
+          enableSystem
+          attribute="class"
+          defaultTheme="system"
+        >
+          <ThemeHotkey />
           {children}
           <Toaster />
         </ThemeProvider>
