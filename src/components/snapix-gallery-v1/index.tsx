@@ -7,14 +7,14 @@ import Link from "next/link";
 import * as React from "react";
 import { toast } from "sonner";
 import {
-  createGallery,
-  deleteGallery,
-  deleteImage,
-  fetchGalleryImages,
-  fetchUngroupedImages,
-  updateGallery,
-  updateImageMetadata,
-  uploadImage,
+	createGallery,
+	deleteGallery,
+	deleteImage,
+	fetchGalleryImages,
+	fetchUngroupedImages,
+	updateGallery,
+	updateImageMetadata,
+	uploadImage,
 } from "./actions";
 import { UNGROUPED_KEY } from "./constants";
 import { DeleteButton } from "./delete-button";
@@ -22,6 +22,7 @@ import { EditManager } from "./edit-manager";
 import { GalleryCreateManager } from "./gallery-create-manager";
 import { GalleryDeleteButton } from "./gallery-delete-button";
 import { GalleryEditManager } from "./gallery-edit-manager";
+import { GalleryOpenButton } from "./gallery-open-button";
 import { GallerySelector } from "./gallery-selector";
 import { ImageCarousel } from "./image-carousel";
 import { UploadManager } from "./upload-manager";
@@ -169,7 +170,7 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 
 	const handleEdit = async (
 		imageId: string,
-		params: { name: string; description: string; galleryId: string | null }
+		params: { name: string; description: string; galleryId: string | null; }
 	) => {
 		try {
 			const originalGalleryId = currentImage?.galleries?.[0]?.galleryId ?? selectedGalleryId ?? null;
@@ -252,6 +253,10 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 						galleries={galleries}
 						value={selectedGalleryId}
 						onValueChange={handleGalleryChange}
+						disabled={isBusy}
+					/>
+					<GalleryOpenButton
+						selectedGallery={selectedGallery}
 						disabled={isBusy}
 					/>
 					<GalleryCreateManager

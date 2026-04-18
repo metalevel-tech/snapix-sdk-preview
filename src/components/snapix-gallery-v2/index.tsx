@@ -24,6 +24,7 @@ import { GenerateManager } from "./generate-manager";
 import { GalleryCreateManager } from "./gallery-create-manager";
 import { GalleryDeleteButton } from "./gallery-delete-button";
 import { GalleryEditManager } from "./gallery-edit-manager";
+import { GalleryOpenButton } from "./gallery-open-button";
 import { GallerySelector } from "./gallery-selector";
 import { ImageCarousel } from "./image-carousel";
 import { UploadManager } from "./upload-manager";
@@ -351,6 +352,10 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 						galleries={galleries}
 						value={selectedGalleryId}
 						onValueChange={handleGalleryChange}
+						disabled={isBusy}
+					/>
+					<GalleryOpenButton
+						selectedGallery={selectedGallery}
 						disabled={isBusy}
 					/>
 					<GalleryCreateManager

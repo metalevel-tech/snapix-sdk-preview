@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { fetchGalleries, fetchGalleryImages, fetchUngroupedImages } from "./client-sdk";
 import { UNGROUPED_KEY } from "./constants";
+import { GalleryOpenButton } from "./gallery-open-button";
 import { GallerySelector } from "./gallery-selector";
 import { ImageCarousel } from "./image-carousel";
 
@@ -18,6 +19,7 @@ export function SnapixGalleryV3() {
 	const [isLoading, setIsLoading] = React.useState(false);
 
 	const cacheKey = selectedGalleryId ?? UNGROUPED_KEY;
+	const selectedGallery = galleries.find((g) => g.id === selectedGalleryId) ?? null;
 	const currentImages = imageCache[cacheKey] ?? [];
 
 	// On mount: fetch gallery list, then prefetch all gallery images + ungrouped in parallel.
@@ -75,6 +77,10 @@ export function SnapixGalleryV3() {
 					galleries={galleries}
 					value={selectedGalleryId}
 					onValueChange={handleGalleryChange}
+					disabled={isLoading}
+				/>
+				<GalleryOpenButton
+					selectedGallery={selectedGallery}
 					disabled={isLoading}
 				/>
 			</div>

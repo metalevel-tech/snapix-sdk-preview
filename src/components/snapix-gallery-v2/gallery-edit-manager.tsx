@@ -54,7 +54,7 @@ export function GalleryEditManager({
 				onClick={handleOpen}
 			>
 				<PencilIcon data-icon="inline-start" />
-				Edit Gallery
+				Edit
 			</Button>
 			<AlertDialog open={open} onOpenChange={setOpen}>
 				<AlertDialogContent>
