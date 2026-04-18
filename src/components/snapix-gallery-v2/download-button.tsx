@@ -17,13 +17,23 @@ export function DownloadButton({
 }: DownloadButtonProps) {
 	const handleDownload = () => {
 		if (!templateImageUrl || !currentImage) return;
+
+		// Derive extension from the variant URL objectKey (e.g. "…/abc.webp")
+		// in case originalName was stored without one (extension-less upload).
+		const IMAGE_EXTS = ["webp", "avif", "jpg", "jpeg", "png", "gif"];
+		const urlExt = templateImageUrl.split("?")[0].split(".").pop()?.toLowerCase() ?? "";
+		const baseName = currentImage.originalName;
+		const hasExt = IMAGE_EXTS.some((e) => baseName.toLowerCase().endsWith(`.${e}`));
+		const filename =
+			hasExt || !IMAGE_EXTS.includes(urlExt) ? baseName : `${baseName}.${urlExt}`;
+
 		const proxyUrl =
 			`/api/download?` +
 			`url=${encodeURIComponent(templateImageUrl)}&` +
-			`filename=${encodeURIComponent(currentImage.originalName)}`;
+			`filename=${encodeURIComponent(filename)}`;
 		const a = document.createElement("a");
 		a.href = proxyUrl;
-		a.download = currentImage.originalName;
+		a.download = filename;
 		document.body.appendChild(a);
 		a.click();
 		document.body.removeChild(a);
