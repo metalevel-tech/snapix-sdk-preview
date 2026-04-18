@@ -11,9 +11,15 @@ export default function Page() {
             <Button className="mt-2 cursor-pointer">Snapix Gallery V1 Demo</Button>
             (Image in Single Gallery)
           </Link>
+
           <Link href="/snapix-gallery-v2" className="cursor-pointer flex flex-col gap-1 justify-center items-center">
             <Button className="mt-2 cursor-pointer">Snapix Gallery V2 Demo</Button>
             (Image in Multiple Galleries)
+          </Link>
+
+          <Link href="/snapix-gallery-v2c" className="cursor-pointer flex flex-col gap-1 justify-center items-center">
+            <Button className="mt-2 cursor-pointer">Snapix Gallery V2C Demo</Button>
+            (Image in Multiple Galleries Client-Side Fetching)
           </Link>
         </div>
         <div className="font-mono text-xs text-muted-foreground">

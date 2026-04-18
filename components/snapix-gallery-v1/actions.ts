@@ -6,9 +6,9 @@ import type {
   UpdateImageResponse,
   UploadImageResponse,
 } from "@metalevel/snapix-sdk-core"
-import { SnapixApiError, SnapixClient } from "@metalevel/snapix-sdk-core"
+import { SnapixApiError, SnapixClientServer } from "@metalevel/snapix-sdk-core"
 
-const client = new SnapixClient()
+const client = new SnapixClientServer()
 
 export async function fetchGalleries(): Promise<GalleryType[]> {
   const { galleries } = await client.listGalleries()
@@ -22,7 +22,7 @@ type GalleryImageWrapper = { image: ImageType }
 export async function fetchGalleryImages(
   galleryId: string
 ): Promise<ImageType[]> {
-  const { gallery } = await client.getGallery(galleryId)
+  const { gallery } = await client.getGallery({ galleryId })
   const wrappers = gallery.images as unknown as GalleryImageWrapper[]
   return wrappers
     .map((w) => w.image)
@@ -76,7 +76,7 @@ export async function deleteImage(
   imageId: string
 ): Promise<{ success: boolean }> {
   try {
-    return await client.deleteImage(imageId)
+    return await client.deleteImage({ imageId })
   } catch (err) {
     if (err instanceof SnapixApiError && err.isReadOnly) {
       throw new Error(
@@ -96,7 +96,8 @@ export async function updateImageMetadata(
   }: { name: string; description: string; gallery?: string | null }
 ): Promise<UpdateImageResponse> {
   try {
-    return await client.updateImage(imageId, {
+    return await client.updateImage({
+      imageId,
       name,
       description: description || undefined,
       galleries: gallery ? [gallery] : [],
@@ -138,7 +139,7 @@ export async function updateGallery(
   { name, isPublic }: { name: string; isPublic: boolean }
 ): Promise<GalleryType> {
   try {
-    return await client.updateGallery(galleryId, { name, isPublic })
+    return await client.updateGallery({ galleryId, name, isPublic })
   } catch (err) {
     if (err instanceof SnapixApiError && err.isReadOnly) {
       throw new Error(
@@ -154,7 +155,7 @@ export async function deleteGallery(
   deleteImages: boolean
 ): Promise<{ success: boolean }> {
   try {
-    return await client.deleteGallery(galleryId, deleteImages)
+    return await client.deleteGallery({ galleryId, deleteImages })
   } catch (err) {
     if (err instanceof SnapixApiError && err.isReadOnly) {
       throw new Error(

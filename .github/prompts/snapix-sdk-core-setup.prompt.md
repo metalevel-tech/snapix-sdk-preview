@@ -8,8 +8,8 @@ Set up **Snapix SDK Core** (`@metalevel/snapix-sdk-core`) in this project by fol
 
 ## Step 1 — Read the live documentation
 
-Call `snapix_get_docs` with slug `sdk` to read the Snapix SDK Core integration guide.
-Call `snapix_get_docs` with slug `mcp` to read the MCP setup reference.
+Call `snapix_get_docs` with docType `sdk` to read the Snapix SDK Core integration guide.
+Call `snapix_get_docs` with docType `mcp` to read the MCP setup reference.
 Use both documents as the authoritative source for installation and configuration details.
 
 ## Step 2 — Install the package
