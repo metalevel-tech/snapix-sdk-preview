@@ -12,8 +12,8 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(@types/react@19.2.14)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       '@metalevel/snapix-sdk-core':
-        specifier: ^0.2.1
-        version: 0.2.1
+        specifier: ^0.5.1
+        version: 0.5.1
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -546,8 +546,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@metalevel/snapix-sdk-core@0.2.1':
-    resolution: {integrity: sha512-o6YqpN6Kyu5DpfYXn51cAV0qgFZXC/+u14fmrXO6hwL8Rw3M4U9SBmVBhK59NAxMPrv0Bg8hX1dIUB0myZQLqQ==}
+  '@metalevel/snapix-sdk-core@0.5.1':
+    resolution: {integrity: sha512-FNgCi/gBiZfQO0hS2lQLQcYDD8l1bNTwXQn02mnOrRSBNh9rSZ2pmB8uGyE/hV0vmLOrFUhG0x3djaQmjgxWXw==}
     engines: {node: '>=18'}
 
   '@modelcontextprotocol/sdk@1.29.0':
@@ -3572,7 +3572,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@metalevel/snapix-sdk-core@0.2.1': {}
+  '@metalevel/snapix-sdk-core@0.5.1': {}
 
   '@modelcontextprotocol/sdk@1.29.0(zod@3.25.76)':
     dependencies:

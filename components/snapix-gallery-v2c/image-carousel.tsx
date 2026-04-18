@@ -44,14 +44,12 @@ function getBestVariantUrl(image: ImageType): string {
 interface ImageCarouselProps {
 	images: ImageType[];
 	isLoading: boolean;
-	onImageChange: (image: ImageType | null) => void;
 	startIndex?: number;
 }
 
 export function ImageCarousel({
 	images,
 	isLoading,
-	onImageChange,
 	startIndex = 0,
 }: ImageCarouselProps) {
 	const [current, setCurrent] = React.useState(0);
@@ -67,15 +65,8 @@ export function ImageCarousel({
 	React.useEffect(() => {
 		const idx = Math.min(startIndex, Math.max(images.length - 1, 0));
 		setCurrent(idx);
-		onImageChange(images[idx] ?? null);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [images]);
-
-	// Notify parent when current slide changes
-	React.useEffect(() => {
-		onImageChange(images[current] ?? null);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [current]);
 
 	const goToPrevious = React.useCallback(() => {
 		setCurrent((prev) => {
@@ -118,7 +109,7 @@ export function ImageCarousel({
 		return (
 			<div className="flex flex-col gap-3 max-w-prose">
 				<p className="text-sm text-muted-foreground">
-					No images found. Upload one to get started.
+					No images found in this gallery.
 				</p>
 			</div>
 		);
