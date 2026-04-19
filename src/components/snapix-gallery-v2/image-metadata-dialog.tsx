@@ -1,18 +1,20 @@
 "use client";
 
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { GalleryType } from "@metalevel/snapix-sdk-core";
+import { ImageIcon, XIcon } from "lucide-react";
 import { GalleryMultiSelector } from "./gallery-multi-selector";
 
 interface ImageMetadataDialogProps {
@@ -30,6 +32,9 @@ interface ImageMetadataDialogProps {
 	galleries?: GalleryType[];
 	galleryIds?: string[];
 	onGalleryIdsChange?: (ids: string[]) => void;
+	replacementFile?: File | null;
+	onReplaceFileClick?: () => void;
+	onReplaceFileClear?: () => void;
 }
 
 export function ImageMetadataDialog({
@@ -47,15 +52,18 @@ export function ImageMetadataDialog({
 	galleries,
 	galleryIds,
 	onGalleryIdsChange,
+	replacementFile,
+	onReplaceFileClick,
+	onReplaceFileClear,
 }: ImageMetadataDialogProps) {
 	return (
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
-			<AlertDialogContent>
+			<AlertDialogContent className="overflow-hidden">
 				<AlertDialogHeader>
 					<AlertDialogTitle>{title}</AlertDialogTitle>
 					<AlertDialogDescription>{dialogDescription}</AlertDialogDescription>
 				</AlertDialogHeader>
-				<div className="flex flex-col gap-3">
+				<div className="flex flex-col gap-3 max-w-full overflow-hidden">
 					<div className="flex flex-col gap-1.5">
 						<label htmlFor="metadata-name" className="text-sm font-medium">
 							Image Name
@@ -93,6 +101,42 @@ export function ImageMetadataDialog({
 								values={galleryIds ?? []}
 								onValuesChange={onGalleryIdsChange}
 							/>
+						</div>
+					)}
+					{onReplaceFileClick && (
+						<div className="flex flex-col gap-1.5 max-w-full">
+							<label className="text-sm font-medium">
+								Replace Image File{" "}
+								<span className="font-normal text-muted-foreground">
+									(optional)
+								</span>
+							</label>
+							{replacementFile ? (
+								<div className="flex items-center gap-2 rounded-md border border-input bg-muted/40 px-3 py-2 text-sm">
+									<ImageIcon className="size-4 shrink-0 text-muted-foreground" />
+									<span className="flex-1 truncate text-foreground">
+										{replacementFile.name}
+									</span>
+									<button
+										type="button"
+										onClick={onReplaceFileClear}
+										className="shrink-0 text-muted-foreground hover:text-foreground"
+										aria-label="Clear selected file"
+									>
+										<XIcon className="size-4" />
+									</button>
+								</div>
+							) : (
+								<Button
+									type="button"
+									variant="outline"
+									className="w-full justify-start gap-2 text-muted-foreground"
+									onClick={onReplaceFileClick}
+								>
+									<ImageIcon className="size-4" />
+									Choose a new image file…
+								</Button>
+							)}
 						</div>
 					)}
 				</div>

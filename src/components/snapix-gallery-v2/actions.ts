@@ -8,6 +8,7 @@ import type {
   UploadImageResponse,
 } from "@metalevel/snapix-sdk-core";
 import { SnapixApiError, SnapixClientServer } from "@metalevel/snapix-sdk-core";
+import { detectImageContentType } from "@/lib/utils";
 
 const client = new SnapixClientServer();
 
@@ -53,26 +54,7 @@ export async function uploadImage(
 
   const arrayBuffer = await file.arrayBuffer();
   const imageBase64 = Buffer.from(arrayBuffer).toString("base64");
-
-  // Browser MIME detection is extension-based; extension-less files get file.type = "".
-  // ?? won't catch empty string, so sniff magic bytes as fallback.
-  let imageContentType = file.type;
-  if (!imageContentType) {
-    const h = new Uint8Array(arrayBuffer.slice(0, 12));
-    if (h[0] === 0x52 && h[1] === 0x49 && h[2] === 0x46 && h[3] === 0x46) {
-      imageContentType = "image/webp";
-    } else if (h[0] === 0x89 && h[1] === 0x50 && h[2] === 0x4e && h[3] === 0x47) {
-      imageContentType = "image/png";
-    } else if (h[0] === 0xff && h[1] === 0xd8 && h[2] === 0xff) {
-      imageContentType = "image/jpeg";
-    } else if (h[0] === 0x47 && h[1] === 0x49 && h[2] === 0x46) {
-      imageContentType = "image/gif";
-    } else if (h[4] === 0x66 && h[5] === 0x74 && h[6] === 0x79 && h[7] === 0x70) {
-      imageContentType = "image/avif";
-    } else {
-      imageContentType = "application/octet-stream";
-    }
-  }
+  const imageContentType = detectImageContentType(file.type, arrayBuffer);
 
   try {
     return await client.uploadImage({
@@ -113,20 +95,32 @@ export async function deleteImage(
   }
 }
 
-export async function updateImageMetadata(
-  imageId: string,
-  {
-    name,
-    description,
-    galleries,
-  }: { name: string; description: string; galleries?: string[]; }
+export async function updateImage(
+  formData: FormData
 ): Promise<UpdateImageResponse> {
+  const imageId = formData.get("imageId") as string;
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string | null;
+  const galleries = formData.getAll("galleryId").filter(Boolean) as string[];
+  const file = formData.get("file") as File | null;
+
+  let imageBase64: string | undefined;
+  let imageContentType: string | undefined;
+
+  if (file) {
+    const arrayBuffer = await file.arrayBuffer();
+    imageBase64 = Buffer.from(arrayBuffer).toString("base64");
+    imageContentType = detectImageContentType(file.type, arrayBuffer);
+  }
+
   try {
     return await client.updateImage({
       imageId,
       name,
       description: description || undefined,
-      galleries,
+      galleries: galleries.length > 0 ? galleries : undefined,
+      imageBase64,
+      imageContentType,
     });
   } catch (err) {
     if (err instanceof SnapixApiError && err.isReadOnly) {

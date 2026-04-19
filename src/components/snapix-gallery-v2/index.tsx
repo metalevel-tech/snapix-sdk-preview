@@ -14,7 +14,7 @@ import {
 	fetchUngroupedImages,
 	generateImage,
 	updateGallery,
-	updateImageMetadata,
+	updateImage,
 	uploadImage,
 } from "./actions";
 import { UNGROUPED_KEY } from "./constants";
@@ -79,11 +79,13 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 	const [uploadProgress, setUploadProgress] = React.useState(0);
 	const [isGenerating, setIsGenerating] = React.useState(false);
 	const [generateProgress, setGenerateProgress] = React.useState(0);
+	const [isEditing, setIsEditing] = React.useState(false);
+	const [editProgress, setEditProgress] = React.useState(0);
 	const [startImageId, setStartImageId] = React.useState<string | null>(null);
 
 	const cacheKey = selectedGalleryId ?? UNGROUPED_KEY;
 	const currentImages = imageCache[cacheKey] ?? [];
-	const isBusy = isLoading || isUploading || isGenerating;
+	const isBusy = isLoading || isUploading || isGenerating || isEditing;
 	const selectedGallery = galleries.find((g) => g.id === selectedGalleryId) ?? null;
 	const templateImageUrl = currentImage ? getBestVariantUrl(currentImage) || null : null;
 	const startIndex = startImageId
@@ -265,19 +267,25 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 
 	const handleEdit = async (
 		imageId: string,
-		params: { name: string; description: string; galleryIds: string[]; originalGalleryIds: string[]; }
+		params: { formData: FormData; originalGalleryIds: string[]; }
 	) => {
+		setIsEditing(true);
+		setEditProgress(5);
+
+		const progressInterval = setInterval(() => {
+			setEditProgress((prev) => Math.min(prev + 10, 85));
+		}, 350);
+
 		try {
 			const oldGalleryIds = params.originalGalleryIds;
-			await updateImageMetadata(imageId, {
-				name: params.name,
-				description: params.description,
-				galleries: params.galleryIds,
-			});
+			const newGalleryIds = params.formData.getAll("galleryId") as string[];
+			await updateImage(params.formData);
+			clearInterval(progressInterval);
+			setEditProgress(100);
 
 			// Evict all affected gallery caches (old + new + current + ungrouped if relevant)
-			const affectedIds = new Set([...oldGalleryIds, ...params.galleryIds, cacheKey]);
-			if (oldGalleryIds.length === 0 || params.galleryIds.length === 0) {
+			const affectedIds = new Set([...oldGalleryIds, ...newGalleryIds, cacheKey]);
+			if (oldGalleryIds.length === 0 || newGalleryIds.length === 0) {
 				affectedIds.add(UNGROUPED_KEY);
 			}
 			setImageCache((prev) => {
@@ -290,20 +298,26 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 			// Stay on current gallery if it's still in the new assignment
 			const currentInNew =
 				selectedGalleryId === null
-					? params.galleryIds.length === 0
-					: params.galleryIds.includes(selectedGalleryId);
+					? newGalleryIds.length === 0
+					: newGalleryIds.includes(selectedGalleryId);
 
 			setStartImageId(imageId);
 			if (currentInNew) {
 				void loadImages(selectedGalleryId, true);
 			} else {
-				const navigateTo = params.galleryIds[0] ?? null;
+				const navigateTo = newGalleryIds[0] ?? null;
 				setSelectedGalleryId(navigateTo);
 				void loadImages(navigateTo, true);
 			}
 			toast.success("Image updated");
 		} catch (err) {
+			clearInterval(progressInterval);
 			toast.error(err instanceof Error ? err.message : "Update failed");
+		} finally {
+			setTimeout(() => {
+				setIsEditing(false);
+				setEditProgress(0);
+			}, 800);
 		}
 	};
 
@@ -424,10 +438,10 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 				/>
 			</div>
 
-			{(isUploading || isGenerating) && (
+			{(isUploading || isGenerating || isEditing) && (
 				<div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm">
 					<Progress
-						value={isUploading ? uploadProgress : generateProgress}
+						value={isUploading ? uploadProgress : isGenerating ? generateProgress : editProgress}
 						className="rounded-none"
 					/>
 				</div>

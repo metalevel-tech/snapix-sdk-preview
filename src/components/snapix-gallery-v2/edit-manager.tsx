@@ -12,7 +12,7 @@ interface EditManagerProps {
 	selectedGalleryId: string | null;
 	currentImage: ImageType | null;
 	disabled?: boolean;
-	onEdit: (imageId: string, params: { name: string; description: string; galleryIds: string[]; originalGalleryIds: string[]; }) => Promise<void>;
+	onEdit: (imageId: string, params: { formData: FormData; originalGalleryIds: string[]; }) => Promise<void>;
 }
 
 export function EditManager({
@@ -28,11 +28,14 @@ export function EditManager({
 	const [dialogGalleryIds, setDialogGalleryIds] = React.useState<string[]>([]);
 	const [originalGalleryIds, setOriginalGalleryIds] = React.useState<string[]>([]);
 	const [isLoadingGalleries, setIsLoadingGalleries] = React.useState(false);
+	const [replacementFile, setReplacementFile] = React.useState<File | null>(null);
+	const fileInputRef = React.useRef<HTMLInputElement>(null);
 
 	const handleOpen = () => {
 		if (!currentImage) return;
 		setName(currentImage.originalName);
 		setDescription(currentImage.description ?? "");
+		setReplacementFile(null);
 		// Seed with what we have immediately (may be partial - API only returns the
 		// gallery the image was fetched from, not all galleries it belongs to)
 		const provisional =
@@ -56,7 +59,13 @@ export function EditManager({
 	const handleConfirm = async () => {
 		if (!currentImage) return;
 		setOpen(false);
-		await onEdit(currentImage.id, { name, description, galleryIds: dialogGalleryIds, originalGalleryIds });
+		const formData = new FormData();
+		formData.append("imageId", currentImage.id);
+		formData.append("name", name);
+		formData.append("description", description);
+		dialogGalleryIds.forEach((id) => formData.append("galleryId", id));
+		if (replacementFile) formData.append("file", replacementFile);
+		await onEdit(currentImage.id, { formData, originalGalleryIds });
 	};
 
 	return (
@@ -70,6 +79,17 @@ export function EditManager({
 				<PencilIcon data-icon="inline-start" />
 				Edit
 			</Button>
+			<input
+				ref={fileInputRef}
+				type="file"
+				accept="image/*"
+				className="hidden"
+				onChange={(e) => {
+					setReplacementFile(e.target.files?.[0] ?? null);
+					// Reset so selecting the same file again triggers onChange
+					e.target.value = "";
+				}}
+			/>
 			<ImageMetadataDialog
 				open={open}
 				onOpenChange={setOpen}
@@ -85,6 +105,9 @@ export function EditManager({
 				galleries={galleries}
 				galleryIds={dialogGalleryIds}
 				onGalleryIdsChange={setDialogGalleryIds}
+				replacementFile={replacementFile}
+				onReplaceFileClick={() => fileInputRef.current?.click()}
+				onReplaceFileClear={() => setReplacementFile(null)}
 			/>
 		</>
 	);
