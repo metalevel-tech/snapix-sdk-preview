@@ -51,8 +51,8 @@ export default function Page() {
         })}
       </div>
 
-      <div className="w-full flex items-center gap-3 justify-start mt-4 text-muted-foreground">
-        <span className="">Powered by</span>
+      <div className="w-full flex items-center gap-3 justify-start mt-6 text-muted-foreground">
+        <span className="hidden">Powered by</span>
         {poweredByData.map(({ name, logoUrl, url, logo }, index) => (
           <div key={name} className="fancy-hover border-0">
             <a key={name} href={url} target="_blank" rel="noopener noreferrer" className="  inline-flex items-center gap-2 text-lg rounded-md py-1 px-2 bg-background border-0">

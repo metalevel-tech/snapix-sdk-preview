@@ -69,7 +69,7 @@ export const poweredByData: PoweredByData[] = [
 		url: "https://www.npmjs.com/package/@metalevel/snapix-mcp-server",
 	},
 	{
-		name: "Repo",
+		name: `v.${process.env.npm_package_version}`,
 		logo: "githubLogo",
 		logoUrl: `/assets/github-logo.svg`,
 		url: "https://github.com/metalevel-tech/snapix-sdk-preview",
