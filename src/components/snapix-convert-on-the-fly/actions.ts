@@ -5,9 +5,11 @@ import { FORMAT_MIME } from "./constants";
 
 const client = new SnapixClientServer();
 
+type ActionResult<T> = { ok: true; data: T; } | { ok: false; error: string; };
+
 export async function convertImage(
 	formData: FormData
-): Promise<{ data: string; mimeType: string; }> {
+): Promise<ActionResult<{ data: string; mimeType: string; }>> {
 	const file = formData.get("file") as File;
 	const width = formData.get("width") as string | null;
 	const height = formData.get("height") as string | null;
@@ -61,13 +63,13 @@ export async function convertImage(
 
 		const mimeType = FORMAT_MIME[format] ?? "application/octet-stream";
 		return {
-			data: Buffer.from(buffer).toString("base64"),
-			mimeType,
+			ok: true,
+			data: { data: Buffer.from(buffer).toString("base64"), mimeType },
 		};
 	} catch (err) {
 		if (err instanceof SnapixApiError) {
-			throw new Error(`Conversion failed: ${err.message}`);
+			return { ok: false, error: `Conversion failed: ${err.message}` };
 		}
-		throw err;
+		return { ok: false, error: err instanceof Error ? err.message : "Conversion failed" };
 	}
 }

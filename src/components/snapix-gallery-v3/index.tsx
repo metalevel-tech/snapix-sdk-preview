@@ -65,7 +65,7 @@ export function SnapixGalleryV3() {
 					<Link href="/" className="flex items-center gap-1 text-muted-foreground mr-1 -ml-1.5">
 						<ChevronLeft className="size-8 transform" strokeWidth={2} /> Home |
 					</Link>
-					<span>Snapix Gallery V2C</span>
+					<span>SnapiX Gallery SDK Browser Client</span>
 				</h1>
 				<p className="text-sm text-muted-foreground">
 					Gallery &amp; image viewer powered by SnapiX SDK
