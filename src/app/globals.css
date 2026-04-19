@@ -127,3 +127,71 @@
     @apply font-sans;
   }
 }
+
+
+/** Login button */
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes demo-spin {
+  0% {
+    --angle: 0deg;
+  }
+
+  100% {
+    --angle: 360deg;
+  }
+}
+
+.fancy-border {
+  position: relative;
+  z-index: 0;
+
+  &::after,
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: var(--radius-md);
+    padding: 0;
+    background: conic-gradient(
+      from var(--angle),
+      #ff4545,
+      #0f9,
+      #006aff,
+      #ff0095,
+      #ff4545
+    );
+    background-color: red;
+    transition: filter 0.5s, opacity 0.5s;
+    animation: 6s demo-spin linear infinite;
+    transform: translate(-50%, -50%);
+  }
+
+  &:hover::after,
+  &:hover::before {
+    animation: 3s demo-spin linear infinite;
+  }
+
+  &::after {
+    z-index: -1;
+    opacity: 0.8;
+  }
+
+  &::before {
+    z-index: -2;
+    opacity: 0.5;
+    filter: blur(0.2rem);
+  }
+
+  &:hover::before {
+    opacity: 0.85;
+    filter: blur(0.6rem);
+  }
+}
