@@ -7,6 +7,7 @@ import { ChevronLeft, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import {
 	Combobox,
 	ComboboxContent,
@@ -43,6 +44,7 @@ export function SnapixConvertOnTheFly() {
 	const [format, setFormat] = React.useState(DEFAULT_FORMAT);
 	const [aspectRatio, setAspectRatio] = React.useState(DEFAULT_ASPECT_RATIO);
 	const [isConverting, setIsConverting] = React.useState(false);
+	const [convertProgress, setConvertProgress] = React.useState(0);
 
 	// Separate typed-input state to allow free-text filtering in comboboxes
 	const [formatTyped, setFormatTyped] = React.useState("");
@@ -87,6 +89,11 @@ export function SnapixConvertOnTheFly() {
 	const handleConvert = async () => {
 		if (!selectedFile) return;
 		setIsConverting(true);
+		setConvertProgress(5);
+
+		const progressInterval = setInterval(() => {
+			setConvertProgress((prev) => Math.min(prev + 10, 85));
+		}, 350);
 
 		try {
 			const formData = new FormData();
@@ -97,6 +104,8 @@ export function SnapixConvertOnTheFly() {
 			formData.append("aspectRatio", aspectRatio);
 
 			const { data, mimeType } = await convertImage(formData);
+			clearInterval(progressInterval);
+			setConvertProgress(100);
 
 			// Decode base64 → Blob → trigger download
 			const bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
@@ -114,9 +123,13 @@ export function SnapixConvertOnTheFly() {
 
 			toast.success("Image converted and downloaded.");
 		} catch (err) {
+			clearInterval(progressInterval);
 			toast.error(err instanceof Error ? err.message : "Conversion failed.");
 		} finally {
-			setIsConverting(false);
+			setTimeout(() => {
+				setIsConverting(false);
+				setConvertProgress(0);
+			}, 800);
 		}
 	};
 
@@ -308,6 +321,13 @@ export function SnapixConvertOnTheFly() {
 					</Button>
 				</div>
 			</div>
+
+			{isConverting && (
+				<div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm">
+					<Progress value={convertProgress} className="rounded-none" />
+				</div>
+			)}
 		</div>
+
 	);
 }
