@@ -128,7 +128,7 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 			const newGallery = await createGallery(name, isPublic);
 			setGalleries((prev) => [...prev, newGallery]);
 			setSelectedGalleryId(newGallery.id);
-			// Pre-seed an empty cache entry — no fetch needed for a brand-new gallery
+			// Pre-seed an empty cache entry - no fetch needed for a brand-new gallery
 			setImageCache((prev) => ({ ...prev, [newGallery.id]: [] }));
 			toast.success("Gallery created");
 		} catch (err) {
@@ -231,10 +231,10 @@ export function SnapixGalleryV1({ galleries: initialGalleries }: Props) {
 	};
 
 	return (
-		<div className="flex min-h-svh flex-col gap-6 p-6 pb-16">
+		<div className="flex min-h-svh flex-col gap-6 p-6 pt-2 pb-16 w-full">
 			<div className="flex flex-col gap-1.5">
-				<h1 className="font-heading text-2xl font-medium flex gap-1">
-					<Link href="/" className="flex items-center gap-1 text-muted-foreground mr-1">
+				<h1 className="font-heading text-2xl font-medium flex gap-1 mb-4">
+					<Link href="/" className="flex items-center gap-1 text-muted-foreground mr-1 -ml-1.5">
 						<ChevronLeft className="size-8 transform" strokeWidth={2} /> Home |
 					</Link>
 					<span>

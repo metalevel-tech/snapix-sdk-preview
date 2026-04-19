@@ -131,6 +131,11 @@
 }
 
 
+/** SVG icon theme-aware fill overrides */
+.icon-embed-svg-override-path-1 {
+  fill: var(--foreground);
+}
+
 /** Login button */
 @property --angle {
   syntax: "<angle>";
@@ -217,7 +222,7 @@
 
   &:hover::after,
   &:hover::before {
-    animation: 3s demo-spin linear infinite;
+    animation: 2s demo-spin linear infinite;
   }
 
   &::after {

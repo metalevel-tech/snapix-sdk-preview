@@ -33,7 +33,7 @@ export function EditManager({
 		if (!currentImage) return;
 		setName(currentImage.originalName);
 		setDescription(currentImage.description ?? "");
-		// Seed with what we have immediately (may be partial — API only returns the
+		// Seed with what we have immediately (may be partial - API only returns the
 		// gallery the image was fetched from, not all galleries it belongs to)
 		const provisional =
 			currentImage.galleries?.map((g) => g.galleryId) ??

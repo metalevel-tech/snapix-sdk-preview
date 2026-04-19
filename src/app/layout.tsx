@@ -37,7 +37,9 @@ export default function RootLayout({
           defaultTheme="system"
         >
           <ThemeHotkey />
-          {children}
+          <div className="flex min-h-svh p-6 max-w-4xl">
+            {children}
+          </div>
           <Toaster />
         </ThemeProvider>
       </body>

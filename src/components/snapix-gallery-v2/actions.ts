@@ -17,7 +17,7 @@ export async function fetchGalleries(): Promise<GalleryType[]> {
 }
 
 // The REST API wraps gallery images as { galleryId, imageId, image: ImageType }[]
-// The SDK types incorrectly say ImageType[] — we cast to extract the nested object.
+// The SDK types incorrectly say ImageType[] - we cast to extract the nested object.
 type GalleryImageWrapper = { image: ImageType; };
 
 export async function fetchGalleryImages(

@@ -124,21 +124,21 @@ export function SnapixConvertOnTheFly() {
 	const displayedAspectValue = aspectTyped || aspectLabel(aspectRatio);
 
 	return (
-		<div className="flex min-h-svh flex-col gap-6 p-6 pb-16">
+		<div className="flex min-h-svh flex-col gap-6 p-6 pt-2 pb-16 w-full">
 			{/* Header */}
 			<div className="flex flex-col gap-1.5">
-				<h1 className="font-heading text-2xl font-medium flex gap-1">
-					<Link href="/" className="flex items-center gap-1 text-muted-foreground mr-1">
+				<h1 className="font-heading text-2xl font-medium flex gap-1 mb-4">
+					<Link href="/" className="flex items-center gap-1 text-muted-foreground mr-1 -ml-1.5">
 						<ChevronLeft className="size-8" strokeWidth={2} /> Home |
 					</Link>
 					<span>Convert Image On The Fly</span>
 				</h1>
 				<p className="text-sm text-muted-foreground">
-					Images are converted server-side and downloaded directly — nothing is stored in the cloud. Max file size: 10&nbsp;MB.
+					Images are converted server-side and downloaded directly - nothing is stored in the cloud. Max file size: 10&nbsp;MB.
 				</p>
 			</div>
 
-			<div className="flex flex-col gap-4 max-w-prose">
+			<div className="flex flex-col gap-4 max-w-full">
 				{/* Row 1: Controls */}
 				<div className="flex flex-wrap items-center gap-3 w-full *:flex-1">
 					<input

@@ -49,24 +49,30 @@ export const routeData: RouteData[] = [
 type PoweredByData = {
 	name: string;
 	logoUrl: string;
-	websiteUrl: string;
+	url: string;
+	logo?: string;
 };
 
 export const poweredByData: PoweredByData[] = [
 	{
 		name: "SnapiX",
 		logoUrl: `${nextPublicSnapixBaseUrl}/assets/snapix-logo-v1.svg`,
-		websiteUrl: "https://snapix.space",
+		url: "https://snapix.space",
 	},
 	{
-		name: "SDK Core",
+		name: "SDK",
 		logoUrl: `${nextPublicSnapixBaseUrl}/assets/snapix-sdk-logo-v1.svg`,
-		websiteUrl: "https://www.npmjs.com/package/@metalevel/snapix-sdk-core",
+		url: "https://www.npmjs.com/package/@metalevel/snapix-sdk-core",
 	},
 	{
-		name: "MCP Server",
+		name: "MCP",
 		logoUrl: `${nextPublicSnapixBaseUrl}/assets/snapix-mcp-logo-v1.svg`,
-		websiteUrl: "https://www.npmjs.com/package/@metalevel/snapix-mcp-server",
-
+		url: "https://www.npmjs.com/package/@metalevel/snapix-mcp-server",
+	},
+	{
+		name: "Repo",
+		logo: "githubLogo",
+		logoUrl: `/assets/github.logo.svg`,
+		url: "https://github.com/metalevel-tech/snapix-sdk-preview",
 	}
 ];

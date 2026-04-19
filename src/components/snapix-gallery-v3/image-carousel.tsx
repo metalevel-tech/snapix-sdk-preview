@@ -9,7 +9,7 @@ import { Skeleton } from "../ui/skeleton";
 
 // The actual REST API metadata shape differs from the SDK types:
 // real: { objectKey: string | null, fileExtension: string, imageInfo: { type, width, height } }
-// SDK types say: { key, format, width, height } — which are wrong
+// SDK types say: { key, format, width, height } - which are wrong
 type RawMeta = {
 	objectKey: string | null;
 	fileExtension: string;
@@ -84,7 +84,7 @@ export function ImageCarousel({
 
 	if (isLoading) {
 		return (
-			<div className="flex flex-col gap-3 max-w-prose">
+			<div className="flex flex-col gap-3 max-w-full">
 				<Skeleton >
 					<AspectRatio
 						ratio={16 / 9}
@@ -107,7 +107,7 @@ export function ImageCarousel({
 
 	if (images.length === 0) {
 		return (
-			<div className="flex flex-col gap-3 max-w-prose">
+			<div className="flex flex-col gap-3 max-w-full">
 				<p className="text-sm text-muted-foreground">
 					No images found in this gallery.
 				</p>
@@ -120,7 +120,7 @@ export function ImageCarousel({
 	const isFailed = failedImages.has(currentImage.id ?? String(current));
 
 	return (
-		<div className="flex flex-col gap-3 max-w-prose">
+		<div className="flex flex-col gap-3 max-w-full">
 			<div className="max-w-full">
 				<AspectRatio
 					ratio={16 / 9}
