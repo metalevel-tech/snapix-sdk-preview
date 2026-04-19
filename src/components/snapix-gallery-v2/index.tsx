@@ -110,9 +110,32 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 		}
 	};
 
-	// Load ungrouped images on mount
+	// Prefetch all galleries + ungrouped in parallel on mount
 	React.useEffect(() => {
-		void loadImages(null);
+		const prefetch = async () => {
+			setIsLoading(true);
+			try {
+				const allIds = [null, ...initialGalleries.map((g) => g.id)];
+				const results = await Promise.allSettled(
+					allIds.map((id) =>
+						id === null ? fetchUngroupedImages() : fetchGalleryImages(id)
+					)
+				);
+				const cacheUpdate: Record<string, ImageType[]> = {};
+				allIds.forEach((id, i) => {
+					const result = results[i];
+					if (result.status === "fulfilled") {
+						cacheUpdate[id ?? UNGROUPED_KEY] = result.value;
+					}
+				});
+				setImageCache(cacheUpdate);
+			} catch (err) {
+				toast.error(err instanceof Error ? err.message : "Failed to load images");
+			} finally {
+				setIsLoading(false);
+			}
+		};
+		void prefetch();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
