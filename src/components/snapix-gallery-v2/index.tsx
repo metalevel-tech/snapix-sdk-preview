@@ -97,10 +97,11 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 		if (!force && imageCache[key] !== undefined) return;
 		setIsLoading(true);
 		try {
-			const images = galleryId
+			const result = galleryId
 				? await fetchGalleryImages(galleryId)
 				: await fetchUngroupedImages();
-			setImageCache((prev) => ({ ...prev, [key]: images }));
+			if (!result.ok) throw new Error(result.error);
+			setImageCache((prev) => ({ ...prev, [key]: result.data }));
 		} catch (err) {
 			toast.error(
 				err instanceof Error ? err.message : "Failed to load images"
@@ -124,8 +125,8 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 				const cacheUpdate: Record<string, ImageType[]> = {};
 				allIds.forEach((id, i) => {
 					const result = results[i];
-					if (result.status === "fulfilled") {
-						cacheUpdate[id ?? UNGROUPED_KEY] = result.value;
+					if (result.status === "fulfilled" && result.value.ok) {
+						cacheUpdate[id ?? UNGROUPED_KEY] = result.value.data;
 					}
 				});
 				setImageCache(cacheUpdate);
@@ -154,7 +155,8 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 		}, 350);
 
 		try {
-			await uploadImage(formData);
+			const result = await uploadImage(formData);
+			if (!result.ok) throw new Error(result.error);
 			clearInterval(progressInterval);
 			setUploadProgress(100);
 
@@ -207,10 +209,11 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 				galleries: params.galleryIds.length > 0 ? params.galleryIds : undefined,
 				imageUrl: params.imageUrl,
 			});
+			if (!result.ok) throw new Error(result.error);
 			clearInterval(progressInterval);
 			setGenerateProgress(100);
 
-			const generatedImage = result.data[0];
+			const generatedImage = result.data.data[0];
 
 			// Evict target gallery caches + ungrouped
 			setImageCache((prev) => {
@@ -245,7 +248,9 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 
 	const handleGalleryCreate = async (name: string, isPublic: boolean) => {
 		try {
-			const newGallery = await createGallery(name, isPublic);
+			const galleryResult = await createGallery(name, isPublic);
+			if (!galleryResult.ok) throw new Error(galleryResult.error);
+			const newGallery = galleryResult.data;
 			setGalleries((prev) => [...prev, newGallery]);
 			setSelectedGalleryId(newGallery.id);
 			// Pre-seed an empty cache entry - no fetch needed for a brand-new gallery
@@ -258,9 +263,10 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 
 	const handleGalleryEdit = async (galleryId: string, name: string, isPublic: boolean) => {
 		try {
-			const updated = await updateGallery(galleryId, { name, isPublic });
+			const galleryResult = await updateGallery(galleryId, { name, isPublic });
+			if (!galleryResult.ok) throw new Error(galleryResult.error);
 			setGalleries((prev) =>
-				prev.map((g) => (g.id === galleryId ? updated : g))
+				prev.map((g) => (g.id === galleryId ? galleryResult.data : g))
 			);
 			toast.success("Gallery updated");
 		} catch (err) {
@@ -270,7 +276,8 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 
 	const handleGalleryDelete = async (galleryId: string, withImages: boolean) => {
 		try {
-			await deleteGallery(galleryId, withImages);
+			const galleryResult = await deleteGallery(galleryId, withImages);
+			if (!galleryResult.ok) throw new Error(galleryResult.error);
 			setGalleries((prev) => prev.filter((g) => g.id !== galleryId));
 			setSelectedGalleryId(null);
 			// Clear the deleted gallery's cache entry; also clear ungrouped
@@ -302,7 +309,8 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 		try {
 			const oldGalleryIds = params.originalGalleryIds;
 			const newGalleryIds = params.formData.getAll("galleryId") as string[];
-			await updateImage(params.formData);
+			const editResult = await updateImage(params.formData);
+			if (!editResult.ok) throw new Error(editResult.error);
 			clearInterval(progressInterval);
 			setEditProgress(100);
 
@@ -347,7 +355,8 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 	const handleDelete = async (imageId: string) => {
 		setIsLoading(true);
 		try {
-			await deleteImage(imageId);
+			const deleteResult = await deleteImage(imageId);
+			if (!deleteResult.ok) throw new Error(deleteResult.error);
 			// Remove from local cache without a full refetch
 			setImageCache((prev) => {
 				const updated = { ...prev };
@@ -374,7 +383,7 @@ export function SnapixGalleryV2({ galleries: initialGalleries }: Props) {
 						<ChevronLeft className="size-8 transform" strokeWidth={2} /> Home |
 					</Link>
 					<span>
-						Snapix Gallery V2 (Image in Multiple Galleries)
+						SnapiX Gallery SDK Server Client Full
 					</span>
 				</h1>
 				<p className="text-sm text-muted-foreground">

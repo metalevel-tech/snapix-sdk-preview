@@ -103,11 +103,13 @@ export function SnapixConvertOnTheFly() {
 			formData.append("format", format);
 			formData.append("aspectRatio", aspectRatio);
 
-			const { data, mimeType } = await convertImage(formData);
+			const result = await convertImage(formData);
+			if (!result.ok) throw new Error(result.error);
 			clearInterval(progressInterval);
 			setConvertProgress(100);
 
 			// Decode base64 → Blob → trigger download
+			const { data, mimeType } = result.data;
 			const bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
 			const blob = new Blob([bytes], { type: mimeType });
 			const blobUrl = URL.createObjectURL(blob);

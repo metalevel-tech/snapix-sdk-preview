@@ -12,9 +12,15 @@ import { SnapixApiError, SnapixClientServer } from "@metalevel/snapix-sdk-core";
 
 const client = new SnapixClientServer();
 
-export async function fetchGalleries(): Promise<GalleryType[]> {
-  const { galleries } = await client.listGalleries();
-  return galleries;
+type ActionResult<T> = { ok: true; data: T; } | { ok: false; error: string; };
+
+export async function fetchGalleries(): Promise<ActionResult<GalleryType[]>> {
+  try {
+    const { galleries } = await client.listGalleries();
+    return { ok: true, data: galleries };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to fetch galleries" };
+  }
 }
 
 // The REST API wraps gallery images as { galleryId, imageId, image: ImageType }[]
@@ -23,30 +29,40 @@ type GalleryImageWrapper = { image: ImageType; };
 
 export async function fetchGalleryImages(
   galleryId: string
-): Promise<ImageType[]> {
-  const { gallery } = await client.getGallery({ galleryId });
-  const wrappers = gallery.images as unknown as GalleryImageWrapper[];
-  return wrappers
-    .map((w) => w.image)
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+): Promise<ActionResult<ImageType[]>> {
+  try {
+    const { gallery } = await client.getGallery({ galleryId });
+    const wrappers = gallery.images as unknown as GalleryImageWrapper[];
+    const data = wrappers
+      .map((w) => w.image)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to fetch gallery images" };
+  }
 }
 
-export async function fetchUngroupedImages(): Promise<ImageType[]> {
-  const { gallery } = await client.getImagesWithoutGallery();
-  return gallery.images
-    .map((entry) => entry.image)
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+export async function fetchUngroupedImages(): Promise<ActionResult<ImageType[]>> {
+  try {
+    const { gallery } = await client.getImagesWithoutGallery();
+    const data = gallery.images
+      .map((entry) => entry.image)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to fetch images" };
+  }
 }
 
 export async function uploadImage(
   formData: FormData
-): Promise<UploadImageResponse> {
+): Promise<ActionResult<UploadImageResponse>> {
   const file = formData.get("file") as File;
   const name = formData.get("name") as string;
   const description = formData.get("description") as string | null;
@@ -57,7 +73,7 @@ export async function uploadImage(
   const imageContentType = detectImageContentType(file.type, arrayBuffer);
 
   try {
-    return await client.uploadImage({
+    const data = await client.uploadImage({
       imageBase64,
       imageContentType,
       name: name || file.name,
@@ -65,39 +81,41 @@ export async function uploadImage(
       galleries: galleryIds.length > 0 ? galleryIds : undefined,
       formatOptions: [{ format: "webp" }, { format: "avif" }],
     });
+    return { ok: true, data };
   } catch (err) {
     if (err instanceof SnapixApiError && err.isReadOnly) {
-      throw new Error(
-        "This API key lacks the 'images-create' permission. Upload requires a key with images-create access."
-      );
+      return { ok: false, error: "This API key lacks the 'images-create' permission. Upload requires a key with images-create access." };
     }
-    throw err;
+    return { ok: false, error: err instanceof Error ? err.message : "Upload failed" };
   }
 }
 
-export async function fetchImageById(imageId: string): Promise<ImageType> {
-  const { data } = await client.getImage({ imageId });
-  return data;
+export async function fetchImageById(imageId: string): Promise<ActionResult<ImageType>> {
+  try {
+    const { data } = await client.getImage({ imageId });
+    return { ok: true, data };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to fetch image" };
+  }
 }
 
 export async function deleteImage(
   imageId: string
-): Promise<{ success: boolean; }> {
+): Promise<ActionResult<{ success: boolean; }>> {
   try {
-    return await client.deleteImage({ imageId });
+    const data = await client.deleteImage({ imageId });
+    return { ok: true, data };
   } catch (err) {
     if (err instanceof SnapixApiError && err.isReadOnly) {
-      throw new Error(
-        "This API key lacks the 'images-delete' permission. Delete requires a key with images-delete access."
-      );
+      return { ok: false, error: "This API key lacks the 'images-delete' permission. Delete requires a key with images-delete access." };
     }
-    throw err;
+    return { ok: false, error: err instanceof Error ? err.message : "Delete failed" };
   }
 }
 
 export async function updateImage(
   formData: FormData
-): Promise<UpdateImageResponse> {
+): Promise<ActionResult<UpdateImageResponse>> {
   const imageId = formData.get("imageId") as string;
   const name = formData.get("name") as string;
   const description = formData.get("description") as string | null;
@@ -114,7 +132,7 @@ export async function updateImage(
   }
 
   try {
-    return await client.updateImage({
+    const data = await client.updateImage({
       imageId,
       name,
       description: description || undefined,
@@ -122,20 +140,19 @@ export async function updateImage(
       imageBase64,
       imageContentType,
     });
+    return { ok: true, data };
   } catch (err) {
     if (err instanceof SnapixApiError && err.isReadOnly) {
-      throw new Error(
-        "This API key lacks the 'images-update' permission. Update requires a key with images-update access."
-      );
+      return { ok: false, error: "This API key lacks the 'images-update' permission. Update requires a key with images-update access." };
     }
-    throw err;
+    return { ok: false, error: err instanceof Error ? err.message : "Update failed" };
   }
 }
 
 export async function createGallery(
   name: string,
   isPublic: boolean
-): Promise<GalleryType> {
+): Promise<ActionResult<GalleryType>> {
   try {
     // The SDK types for createGallery return GalleryType at this version,
     // but the REST API actually returns { gallery: GalleryWithImagesType }.
@@ -143,46 +160,42 @@ export async function createGallery(
       name,
       isPublic,
     })) as unknown as { gallery: GalleryType; };
-    return result.gallery;
+    return { ok: true, data: result.gallery };
   } catch (err) {
     if (err instanceof SnapixApiError && err.isReadOnly) {
-      throw new Error(
-        "This API key lacks the 'galleries-create' permission. Creating galleries requires a key with galleries-create access."
-      );
+      return { ok: false, error: "This API key lacks the 'galleries-create' permission. Creating galleries requires a key with galleries-create access." };
     }
-    throw err;
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to create gallery" };
   }
 }
 
 export async function updateGallery(
   galleryId: string,
   { name, isPublic }: { name: string; isPublic: boolean; }
-): Promise<GalleryType> {
+): Promise<ActionResult<GalleryType>> {
   try {
-    return await client.updateGallery({ galleryId, name, isPublic });
+    const data = await client.updateGallery({ galleryId, name, isPublic });
+    return { ok: true, data };
   } catch (err) {
     if (err instanceof SnapixApiError && err.isReadOnly) {
-      throw new Error(
-        "This API key lacks the 'galleries-update' permission. Updating galleries requires a key with galleries-update access."
-      );
+      return { ok: false, error: "This API key lacks the 'galleries-update' permission. Updating galleries requires a key with galleries-update access." };
     }
-    throw err;
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to update gallery" };
   }
 }
 
 export async function deleteGallery(
   galleryId: string,
   deleteImages: boolean
-): Promise<{ success: boolean; }> {
+): Promise<ActionResult<{ success: boolean; }>> {
   try {
-    return await client.deleteGallery({ galleryId, deleteImages });
+    const data = await client.deleteGallery({ galleryId, deleteImages });
+    return { ok: true, data };
   } catch (err) {
     if (err instanceof SnapixApiError && err.isReadOnly) {
-      throw new Error(
-        "This API key lacks the 'galleries-delete' or 'galleries-delete-with-images' permission. Deleting galleries requires a key with the appropriate delete access."
-      );
+      return { ok: false, error: "This API key lacks the 'galleries-delete' or 'galleries-delete-with-images' permission. Deleting galleries requires a key with the appropriate delete access." };
     }
-    throw err;
+    return { ok: false, error: err instanceof Error ? err.message : "Failed to delete gallery" };
   }
 }
 
@@ -192,9 +205,9 @@ export async function generateImage(params: {
   description?: string;
   galleries?: string[];
   imageUrl?: string;
-}): Promise<GenerateImageResponse> {
+}): Promise<ActionResult<GenerateImageResponse>> {
   try {
-    return await client.generateImage({
+    const data = await client.generateImage({
       promptText: params.promptText,
       name: params.name || undefined,
       description: params.description || undefined,
@@ -202,12 +215,11 @@ export async function generateImage(params: {
       imageUrl: params.imageUrl,
       formatOptions: [{ format: "webp" }, { format: "avif" }],
     });
+    return { ok: true, data };
   } catch (err) {
     if (err instanceof SnapixApiError && err.isReadOnly) {
-      throw new Error(
-        "This API key lacks the 'images-create' permission. Generation requires a key with images-create access."
-      );
+      return { ok: false, error: "This API key lacks the 'images-create' permission. Generation requires a key with images-create access." };
     }
-    throw err;
+    return { ok: false, error: err instanceof Error ? err.message : "Generation failed" };
   }
 }

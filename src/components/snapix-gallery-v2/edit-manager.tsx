@@ -47,8 +47,9 @@ export function EditManager({
 		// Fetch complete gallery membership in the background
 		setIsLoadingGalleries(true);
 		fetchImageById(currentImage.id)
-			.then((img) => {
-				const fullIds = img.galleries?.map((g) => g.galleryId) ?? [];
+			.then((result) => {
+				if (!result.ok) return; // keep provisional data on error
+				const fullIds = result.data.galleries?.map((g) => g.galleryId) ?? [];
 				setDialogGalleryIds(fullIds);
 				setOriginalGalleryIds(fullIds);
 			})
