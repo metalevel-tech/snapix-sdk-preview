@@ -1,6 +1,6 @@
 # snapix-sdk-preview
 
-A private Next.js + shadcn/ui application for interactively testing and previewing the Snapix SDK packages - primarily `@metalevel/snapix-sdk-core` and future variants such as `sdk-react`.
+Next.js + shadcn/ui application for interactively testing and previewing the Snapix SDK packages - primarily `@metalevel/snapix-sdk-core` and future variants such as `sdk-react`.
 
 ## Purpose
 

@@ -19,6 +19,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
+    "pm2": "pm2 start ecosystem.config.cjs",
+    "pm2:deploy": "bash scripts/start-pm2.sh",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"
