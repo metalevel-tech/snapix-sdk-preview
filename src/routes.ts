@@ -1,4 +1,3 @@
-import { nextPublicSnapixBaseUrl } from "@metalevel/snapix-sdk-core/basic";
 
 type RouteData = {
 	title: string;
@@ -56,23 +55,23 @@ type PoweredByData = {
 export const poweredByData: PoweredByData[] = [
 	{
 		name: "SnapiX",
-		logoUrl: `${nextPublicSnapixBaseUrl}/assets/snapix-logo-v1.svg`,
+		logoUrl: `/assets/snapix-logo-v1.svg`,
 		url: "https://snapix.space",
 	},
 	{
 		name: "SDK",
-		logoUrl: `${nextPublicSnapixBaseUrl}/assets/snapix-sdk-logo-v1.svg`,
+		logoUrl: `/assets/snapix-sdk-logo-v1.svg`,
 		url: "https://www.npmjs.com/package/@metalevel/snapix-sdk-core",
 	},
 	{
 		name: "MCP",
-		logoUrl: `${nextPublicSnapixBaseUrl}/assets/snapix-mcp-logo-v1.svg`,
+		logoUrl: `/assets/snapix-mcp-logo-v1.svg`,
 		url: "https://www.npmjs.com/package/@metalevel/snapix-mcp-server",
 	},
 	{
 		name: "Repo",
 		logo: "githubLogo",
-		logoUrl: `/assets/github.logo.svg`,
+		logoUrl: `/assets/github-logo.svg`,
 		url: "https://github.com/metalevel-tech/snapix-sdk-preview",
 	}
 ];

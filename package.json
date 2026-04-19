@@ -1,12 +1,16 @@
 {
   "name": "@metalevel/snapix-sdk-preview",
-  "version": "0.5.1",
+  "version": "1.0.0",
   "description": "Interactive preview and test app for @metalevel/snapix-sdk-core and future Snapix SDK variants",
   "type": "module",
   "private": true,
   "license": "MIT",
-  "author": "pa4080",
-  "homepage": "https://snapix-sdk-preview.snapix.space",
+  "author": {
+    "name": "Spas Z. Spasov (pa4080)",
+    "email": "spas.z.spasov@gmail.com",
+    "url": "https://spasov.me"
+  },
+  "homepage": "https://sdk-preview.snapix.space",
   "repository": {
     "type": "git",
     "url": "https://github.com/metalevel-tech/snapix-sdk-preview"
