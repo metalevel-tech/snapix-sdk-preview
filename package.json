@@ -1,11 +1,12 @@
 {
   "name": "@metalevel/snapix-sdk-preview",
-  "version": "0.5.3",
+  "version": "0.5.1",
   "description": "Interactive preview and test app for @metalevel/snapix-sdk-core and future Snapix SDK variants",
   "type": "module",
   "private": true,
   "license": "MIT",
   "author": "pa4080",
+  "homepage": "https://snapix-sdk-preview.snapix.space",
   "repository": {
     "type": "git",
     "url": "https://github.com/metalevel-tech/snapix-sdk-preview"
@@ -20,7 +21,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
-    "@metalevel/snapix-sdk-core": "^0.5.4",
+    "@metalevel/snapix-sdk-core": "^0.5.1",
     "@wrksz/themes": "^0.8.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

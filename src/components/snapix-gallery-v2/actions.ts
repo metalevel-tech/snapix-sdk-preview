@@ -1,5 +1,6 @@
 "use server";
 
+import { detectImageContentType } from "@/lib/utils";
 import type {
   GalleryType,
   GenerateImageResponse,
@@ -8,7 +9,6 @@ import type {
   UploadImageResponse,
 } from "@metalevel/snapix-sdk-core";
 import { SnapixApiError, SnapixClientServer } from "@metalevel/snapix-sdk-core";
-import { detectImageContentType } from "@/lib/utils";
 
 const client = new SnapixClientServer();
 
