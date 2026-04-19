@@ -1,3 +1,5 @@
+import { nextPublicSnapixBaseUrl } from "@metalevel/snapix-sdk-core/basic";
+
 type RouteData = {
 	title: string;
 	shortDescription: string;
@@ -39,6 +41,32 @@ export const routeData: RouteData[] = [
 		coverImage: "https://images.snapix.space/32dcsv4hfaPFcWqPFSm7kougsC3/2afefe98-0255-455b-a146-ae48eb80dd88-1200x630.webp",
 		route: "snapix-convert-on-the-fly",
 		special: false,
+
+	}
+];
+
+
+type PoweredByData = {
+	name: string;
+	logoUrl: string;
+	websiteUrl: string;
+};
+
+export const poweredByData: PoweredByData[] = [
+	{
+		name: "SnapiX",
+		logoUrl: `${nextPublicSnapixBaseUrl}/assets/snapix-logo-v1.svg`,
+		websiteUrl: "https://snapix.space",
+	},
+	{
+		name: "SDK Core",
+		logoUrl: `${nextPublicSnapixBaseUrl}/assets/snapix-sdk-logo-v1.svg`,
+		websiteUrl: "https://www.npmjs.com/package/@metalevel/snapix-sdk-core",
+	},
+	{
+		name: "MCP Server",
+		logoUrl: `${nextPublicSnapixBaseUrl}/assets/snapix-mcp-logo-v1.svg`,
+		websiteUrl: "https://www.npmjs.com/package/@metalevel/snapix-mcp-server",
 
 	}
 ];

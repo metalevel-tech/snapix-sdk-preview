@@ -1,8 +1,10 @@
-import { routeData } from "@/routes";
+import { poweredByData, routeData } from "@/routes";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+
+
 
 export default function Page() {
   return (
@@ -45,6 +47,19 @@ export default function Page() {
               </Link>
             );
           })}
+        </div>
+        <div className="w-full flex items-center gap-3 justify-start mt-4 text-muted-foreground">
+          <span className="">Powered by</span>
+          {poweredByData.map(({ name, logoUrl, websiteUrl }, index) => (
+            <div key={name} className="fancy-hover border-0">
+              <a key={name} href={websiteUrl} target="_blank" rel="noopener noreferrer" className="  inline-flex items-center gap-2 text-lg rounded-md py-1 px-2 bg-background border-0">
+                <Image src={logoUrl} alt={`${name} logo`} width={24} height={24}
+                  className={cn("w-6 h-6 object-contain", index > 0 && 'grayscale-15')}
+                  unoptimized />
+                <span>{name}</span>
+              </a>
+            </div>
+          ))}
         </div>
       </div>
     </div>
