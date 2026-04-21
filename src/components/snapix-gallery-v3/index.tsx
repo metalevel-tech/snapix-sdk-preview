@@ -22,32 +22,37 @@ export function SnapixGalleryV3() {
 	const selectedGallery = galleries.find((g) => g.id === selectedGalleryId) ?? null;
 	const currentImages = imageCache[cacheKey] ?? [];
 
-	// On mount: fetch gallery list, then prefetch all gallery images + ungrouped in parallel.
+	// Fetch gallery list + initial (ungrouped) view in parallel, then background-prefetch the rest.
 	React.useEffect(() => {
 		const init = async () => {
 			setIsLoading(true);
 			try {
-				const fetchedGalleries = await fetchGalleries();
+				const [fetchedGalleries, initialImages] = await Promise.all([
+					fetchGalleries(),
+					fetchUngroupedImages(),
+				]);
 				setGalleries(fetchedGalleries);
+				setImageCache({ [UNGROUPED_KEY]: initialImages });
+				setIsLoading(false);
 
-				const allIds = [null, ...fetchedGalleries.map((g) => g.id)];
-				const results = await Promise.allSettled(
-					allIds.map((id) =>
-						id === null ? fetchUngroupedImages() : fetchGalleryImages(id)
-					)
-				);
-
-				const cacheUpdate: Record<string, ImageType[]> = {};
-				allIds.forEach((id, i) => {
-					const result = results[i];
-					if (result.status === "fulfilled") {
-						cacheUpdate[id ?? UNGROUPED_KEY] = result.value;
-					}
-				});
-				setImageCache(cacheUpdate);
+				// Background-prefetch remaining galleries (no loading state)
+				void (async () => {
+					const results = await Promise.allSettled(
+						fetchedGalleries.map((g) => fetchGalleryImages(g.id))
+					);
+					setImageCache((prev) => {
+						const next = { ...prev };
+						fetchedGalleries.forEach((g, i) => {
+							const result = results[i];
+							if (result.status === "fulfilled") {
+								next[g.id] = result.value;
+							}
+						});
+						return next;
+					});
+				})();
 			} catch (err) {
 				toast.error(err instanceof Error ? err.message : "Failed to load galleries");
-			} finally {
 				setIsLoading(false);
 			}
 		};
