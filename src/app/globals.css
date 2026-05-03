@@ -143,6 +143,9 @@
   inherits: false;
 }
 
+/**
+ * Fancy border animation
+ */
 @keyframes demo-spin {
   0% {
     --angle: 0deg;
