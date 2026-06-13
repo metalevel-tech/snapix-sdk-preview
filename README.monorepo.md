@@ -58,5 +58,4 @@ import { Button } from "@/components/ui/button";
 ## Links
 
 - [Snapix SDK documentation](https://www.snapix.space/docs/sdk)
-- [Snapix SDK Core source](https://github.com/metalevel-tech/snapix-sdk-core)
-- [Snapix MCP documentation](https://www.snapix.space/docs/mcp)
+- [SDK Core source](https://github.com/metalevel-tech/snapix-sdk-core)
